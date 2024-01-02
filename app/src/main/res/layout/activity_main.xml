@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity" >
+    tools:context=".MainActivity">
 
     <Button
         android:id="@+id/yandexAuthButton"
@@ -15,32 +14,35 @@
         android:text="Авторизоваться в Яндекс" />
 
     <EditText
-        android:id="@+id/absolutePathInput"
+        android:id="@+id/pathInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="text"
+        android:hint="Путь с начальным /"
         android:text="/a/b/c" />
 
-    <Button
-        android:id="@+id/createDirButton1"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Создать папку 1" />
+        android:orientation="horizontal">
 
-    <EditText
-        android:id="@+id/relativePathInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="text"
-        android:text="qwe/rty" />
+        <Button
+            android:id="@+id/createCloudDirButton1"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:backgroundTint="#42A5F5"
+            android:text="Создать облачную папку" />
 
-    <Button
-        android:id="@+id/createDirButton2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Создать папку 2" />
+        <Button
+            android:id="@+id/createLocalDirButton1"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Создать локальную папку" />
+
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"

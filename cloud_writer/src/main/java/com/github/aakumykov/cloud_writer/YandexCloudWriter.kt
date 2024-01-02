@@ -19,7 +19,7 @@ class YandexCloudWriter @AssistedInject constructor(
     private val okHttpClient: OkHttpClient,
     private val gson: Gson,
     @Assisted private val authToken: String
-) : CloudWriter
+) : BasicCloudWriter()
 {
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
     override fun createDir(dirName: String) {
@@ -42,17 +42,13 @@ class YandexCloudWriter @AssistedInject constructor(
     }
 
 
+    // TODO: игнорировать, если существует
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
     override fun createDirWithParents(dirName: String) {
-        dirName
-            .trim()
-            .replace(Regex("^"),DS)
-            .replace(Regex("^[$DS]+"), DS)
-            .let { name ->
-                name.split(DS).reduce { nextDirPath, nextDirName ->
-                    val dirPath = "$nextDirPath/$nextDirName"
-                    createDir(dirPath)
-                    dirPath
+        with(dirName) {
+            this.trim()
+            iterateThroughDirHierarchy(this) { nextDirName ->
+                createDir(nextDirName)
             }
         }
     }
@@ -118,7 +114,6 @@ class YandexCloudWriter @AssistedInject constructor(
     companion object {
         private const val BASE_URL = "https://cloud-api.yandex.net/v1/disk/resources"
         private const val DEFAULT_MEDIA_TYPE = "application/octet-stream"
-        private const val DS = "/"
     }
 
 

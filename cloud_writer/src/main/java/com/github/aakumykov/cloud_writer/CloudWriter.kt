@@ -26,4 +26,9 @@ interface CloudWriter {
         : CloudWriterException(responseCode, responseMessage)
 
 
+    companion object {
+        const val DS = "/"
+        const val ARG_NAME_AUTH_TOKEN = "AUTH_TOKEN_ARG"
+        const val ARG_NAME_ROOT_DIR = "ROOT_DIR_ARG"
+    }
 }

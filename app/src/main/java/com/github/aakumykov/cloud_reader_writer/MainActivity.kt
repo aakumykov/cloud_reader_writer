@@ -1,12 +1,16 @@
 package com.github.aakumykov.cloud_reader_writer
 
-import androidx.appcompat.app.AppCompatActivity
+import android.Manifest
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import com.github.aakumykov.cloud_reader_writer.databinding.ActivityMainBinding
 import com.github.aakumykov.cloud_reader_writer.extentions.getStringFromPreferences
 import com.github.aakumykov.cloud_reader_writer.extentions.storeStringInPreferences
+import com.github.aakumykov.cloud_writer.CloudWriter
+import com.github.aakumykov.cloud_writer.LocalCloudWriter
 import com.github.aakumykov.cloud_writer.YandexCloudWriter
 import com.github.aakumykov.kotlin_playground.cloud_authenticator.CloudAuthenticator
 import com.github.aakumykov.kotlin_playground.cloud_authenticator.YandexAuthenticator
@@ -14,19 +18,27 @@ import com.gitlab.aakumykov.exception_utils_module.ExceptionUtils
 import com.google.gson.Gson
 import com.yandex.authsdk.internal.strategy.LoginType
 import okhttp3.OkHttpClient
+import permissions.dispatcher.ktx.PermissionsRequester
+import permissions.dispatcher.ktx.constructPermissionsRequest
 import kotlin.concurrent.thread
 
-class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks{
+class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
 
     private lateinit var binding: ActivityMainBinding
     private var yandexAuthToken: String? = null
     private lateinit var yandexAuthenticator: CloudAuthenticator
+    private lateinit var permissionsRequester: PermissionsRequester
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        permissionsRequester = constructPermissionsRequest(
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            requiresPermission = ::createLocalDir
+        )
 
         yandexAuthenticator = YandexAuthenticator(this, LoginType.NATIVE, this)
         yandexAuthToken = getStringFromPreferences(YANDEX_AUTH_TOKEN)
@@ -36,28 +48,33 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks{
             yandexAuthenticator.startAuth()
         }
 
-        binding.createDirButton1.setOnClickListener { createDir1() }
-
-        binding.createDirButton2.setOnClickListener { createDir2() }
+        binding.createCloudDirButton1.setOnClickListener { createCloudDir() }
+        binding.createLocalDirButton1.setOnClickListener { permissionsRequester.launch() }
     }
 
 
-    private fun createDir1() {
-        createDirReal(binding.absolutePathInput.text.toString())
+    private fun localCloudWriter(): CloudWriter = LocalCloudWriter(
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).absolutePath,
+        "")
+
+    private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(OkHttpClient.Builder().build(), Gson(), yandexAuthToken!!)
+
+
+    private fun createLocalDir() {
+        createDirReal(localCloudWriter(), binding.pathInput.text.toString() )
     }
 
-    private fun createDir2() {
-        createDirReal(binding.relativePathInput.text.toString())
+    private fun createCloudDir() {
+        createDirReal(yandexCloudWriter(), binding.pathInput.text.toString())
     }
 
-    private fun createDirReal(dirName: String) {
+
+    private fun createDirReal(cloudWriter: CloudWriter, dirName: String) {
         thread {
             try {
                 hideError()
                 showProgressBar()
-
-                YandexCloudWriter(OkHttpClient.Builder().build(), Gson(), yandexAuthToken!!)
-                    .createDirWithParents(dirName)
+                cloudWriter.createDirWithParents(dirName)
             }
             catch (t: Throwable) {
                 showError(t)
@@ -67,6 +84,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks{
             }
         }
     }
+
 
     override fun onCloudAuthSuccess(authToken: String) {
         yandexAuthToken = authToken
