@@ -5,14 +5,16 @@ import java.io.IOException
 
 interface CloudWriter {
 
-    @Throws(IOException::class, UnsuccessfulResponseException::class)
+    // TODO: игнорировать, если существует
+    @Throws(IOException::class, UnsuccessfulResponseException::class, AlreadyExistsException::class)
     fun createDir(parentDirName: String, childDirName: String)
 
 
-    @Throws(IOException::class, UnsuccessfulResponseException::class)
+    @Throws(IOException::class, UnsuccessfulResponseException::class, AlreadyExistsException::class)
     fun createDirWithParents(parentDirName: String, childDirName: String)
 
 
+    // TODO: AlreadyExistsException
     @Throws(IOException::class, UnsuccessfulResponseException::class)
     fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean = false)
 
@@ -22,7 +24,11 @@ interface CloudWriter {
         : Exception("${responseCode}: $responseMessage")
 
 
-    class UnsuccessfulResponseException(responseCode: Int, responseMessage: String)
+    open class UnsuccessfulResponseException(responseCode: Int, responseMessage: String)
+        : CloudWriterException(responseCode, responseMessage)
+
+
+    class AlreadyExistsException(responseCode: Int, responseMessage: String)
         : CloudWriterException(responseCode, responseMessage)
 
 

@@ -21,8 +21,9 @@ class YandexCloudWriter @AssistedInject constructor(
     @Assisted private val authToken: String
 ) : BasicCloudWriter()
 {
-    // TODO: игнорировать, если существует
-    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    @Throws(IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.AlreadyExistsException::class)
     override fun createDir(parentDirName: String, childDirName: String) {
 
         val dirName = fixDirSeparators(parentDirName + CloudWriter.DS + childDirName)
@@ -40,7 +41,12 @@ class YandexCloudWriter @AssistedInject constructor(
             .build()
 
         okHttpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw unsuccessfulResponseException(response)
+            if (!response.isSuccessful) {
+                when (response.code) {
+                    409 -> throw CloudWriter.AlreadyExistsException(response.code, dirName)
+                    else -> throw unsuccessfulResponseException(response)
+                }
+            }
         }
     }
 

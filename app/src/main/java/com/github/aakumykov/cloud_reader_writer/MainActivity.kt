@@ -69,6 +69,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
                 yandexCloudWriter().createDir("/", dirName())
                 showToast("Папка ${dirName()} создана")
             }
+            catch (e: CloudWriter.AlreadyExistsException) {
+                showError(Exception("Папка уже существует"))
+            }
             catch(t: Throwable) {
                 showError(t)
             }
