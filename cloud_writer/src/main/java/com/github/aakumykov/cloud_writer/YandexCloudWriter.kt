@@ -21,6 +21,7 @@ class YandexCloudWriter @AssistedInject constructor(
     @Assisted private val authToken: String
 ) : BasicCloudWriter()
 {
+    // TODO: игнорировать, если существует
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
     override fun createDir(parentDirName: String, childDirName: String) {
 
@@ -47,12 +48,12 @@ class YandexCloudWriter @AssistedInject constructor(
     // TODO: игнорировать, если существует
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
     override fun createDirWithParents(parentDirName: String, childDirName: String) {
-        /*with(dirName) {
+        with(childDirName) {
             this.trim()
             iterateThroughDirHierarchy(this) { nextDirName ->
-                createDir(nextDirName)
+                createDir(parentDirName, nextDirName)
             }
-        }*/
+        }
     }
 
 

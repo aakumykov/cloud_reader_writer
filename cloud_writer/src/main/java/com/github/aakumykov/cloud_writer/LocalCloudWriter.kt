@@ -1,6 +1,7 @@
 package com.github.aakumykov.cloud_writer
 
 import com.github.aakumykov.cloud_writer.CloudWriter.Companion.ARG_NAME_AUTH_TOKEN
+import com.github.aakumykov.cloud_writer.CloudWriter.Companion.DS
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.io.File
@@ -15,7 +16,8 @@ class LocalCloudWriter @AssistedInject constructor(
         CloudWriter.UnsuccessfulResponseException::class
     )
     override fun createDir(parentDirName: String, childDirName: String) {
-        if (!File(parentDirName, childDirName).mkdir())
+        val fullDirName = fixDirSeparators(parentDirName + DS + childDirName)
+        if (!File(fullDirName).mkdir())
             throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
     }
 
@@ -25,7 +27,8 @@ class LocalCloudWriter @AssistedInject constructor(
         CloudWriter.UnsuccessfulResponseException::class
     )
     override fun createDirWithParents(parentDirName: String, childDirName: String) {
-        if (!File(parentDirName, childDirName).mkdirs())
+        val fullDirName = fixDirSeparators(parentDirName + DS + childDirName)
+        if (!File(fullDirName).mkdirs())
             throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
     }
 
