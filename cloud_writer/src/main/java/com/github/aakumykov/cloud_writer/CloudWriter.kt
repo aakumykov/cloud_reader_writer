@@ -6,11 +6,11 @@ import java.io.IOException
 interface CloudWriter {
 
     @Throws(IOException::class, UnsuccessfulResponseException::class)
-    fun createDir(dirName: String)
+    fun createDir(parentDirName: String, childDirName: String)
 
 
     @Throws(IOException::class, UnsuccessfulResponseException::class)
-    fun createDirWithParents(dirName: String)
+    fun createDirWithParents(parentDirName: String, childDirName: String)
 
 
     @Throws(IOException::class, UnsuccessfulResponseException::class)

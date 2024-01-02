@@ -19,6 +19,8 @@ abstract class BasicCloudWriter : CloudWriter {
             .replace(Regex("^[${DS}]+"), DS)
     }
 
+    fun fixDirSeparators(dirName: String): String  = dirName.replace(Regex("[/]+"), "/")
+
     companion object {
         private const val DS = "/"
     }

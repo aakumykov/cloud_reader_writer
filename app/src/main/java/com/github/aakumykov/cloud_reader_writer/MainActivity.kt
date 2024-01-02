@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.aakumykov.cloud_reader_writer.databinding.ActivityMainBinding
 import com.github.aakumykov.cloud_reader_writer.extentions.getStringFromPreferences
@@ -35,6 +36,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        getStringFromPreferences(DIR_NAME)?.let { binding.pathInput.setText(it) }
+
         permissionsRequester = constructPermissionsRequest(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             requiresPermission = ::createLocalDir
@@ -48,33 +51,57 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
             yandexAuthenticator.startAuth()
         }
 
-        binding.createCloudDirButton1.setOnClickListener { createCloudDir() }
+        binding.createSimpleCloudDirButton.setOnClickListener { createSimpleCloudDir() }
+        binding.createDeepCloudDirButton.setOnClickListener { createDeepCloudDir() }
         binding.createLocalDirButton1.setOnClickListener { permissionsRequester.launch() }
     }
 
-
-    private fun localCloudWriter(): CloudWriter = LocalCloudWriter(
-        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).absolutePath,
-        "")
-
-    private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(OkHttpClient.Builder().build(), Gson(), yandexAuthToken!!)
-
-
-    private fun createLocalDir() {
-        createDirReal(localCloudWriter(), binding.pathInput.text.toString() )
+    override fun onDestroy() {
+        super.onDestroy()
+        storeStringInPreferences(DIR_NAME, dirName())
     }
 
-    private fun createCloudDir() {
-        createDirReal(yandexCloudWriter(), binding.pathInput.text.toString())
-    }
-
-
-    private fun createDirReal(cloudWriter: CloudWriter, dirName: String) {
+    private fun createSimpleCloudDir() {
         thread {
             try {
                 hideError()
                 showProgressBar()
-                cloudWriter.createDirWithParents(dirName)
+                yandexCloudWriter().createDir("/", dirName())
+                showToast("Папка ${dirName()} создана")
+            }
+            catch(t: Throwable) {
+                showError(t)
+            }
+            finally {
+                hideProgressBar()
+            }
+        }
+    }
+
+    private fun createDeepCloudDir() {
+        thread {
+            try {
+                hideError()
+                showProgressBar()
+                yandexCloudWriter().createDirWithParents("/", dirName())
+                showToast("Папка ${dirName()} создана")
+            }
+            catch(t: Throwable) {
+                showError(t)
+            }
+            finally {
+                hideProgressBar()
+            }
+        }
+    }
+
+    private fun createLocalDir() {
+        thread {
+            try {
+                hideError()
+                showProgressBar()
+                localCloudWriter().createDirWithParents(localMusicDirPath(), dirName())
+                showToast("Папка ${dirName()} создана")
             }
             catch (t: Throwable) {
                 showError(t)
@@ -84,6 +111,19 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
             }
         }
     }
+
+
+    private fun showToast(text: String) {
+        binding.root.post { Toast.makeText(this, text, Toast.LENGTH_SHORT).show() }
+    }
+
+
+    private fun localCloudWriter(): CloudWriter = LocalCloudWriter("")
+
+    private fun dirName(): String = binding.pathInput.text.toString()
+
+    private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(OkHttpClient.Builder().build(), Gson(), yandexAuthToken!!)
+
 
 
     override fun onCloudAuthSuccess(authToken: String) {
@@ -123,8 +163,12 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         }
     }
 
+    private fun localMusicDirPath(): String
+        = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).absolutePath
+
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
         const val YANDEX_AUTH_TOKEN = "AUTH_TOKEN"
+        const val DIR_NAME = "DIR_NAME"
     }
 }

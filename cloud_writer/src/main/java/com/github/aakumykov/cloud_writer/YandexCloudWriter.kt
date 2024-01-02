@@ -22,7 +22,9 @@ class YandexCloudWriter @AssistedInject constructor(
 ) : BasicCloudWriter()
 {
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
-    override fun createDir(dirName: String) {
+    override fun createDir(parentDirName: String, childDirName: String) {
+
+        val dirName = fixDirSeparators(parentDirName + CloudWriter.DS + childDirName)
 
         val url = BASE_URL.toHttpUrl().newBuilder().apply {
             addQueryParameter("path", dirName)
@@ -44,13 +46,13 @@ class YandexCloudWriter @AssistedInject constructor(
 
     // TODO: игнорировать, если существует
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
-    override fun createDirWithParents(dirName: String) {
-        with(dirName) {
+    override fun createDirWithParents(parentDirName: String, childDirName: String) {
+        /*with(dirName) {
             this.trim()
             iterateThroughDirHierarchy(this) { nextDirName ->
                 createDir(nextDirName)
             }
-        }
+        }*/
     }
 
 

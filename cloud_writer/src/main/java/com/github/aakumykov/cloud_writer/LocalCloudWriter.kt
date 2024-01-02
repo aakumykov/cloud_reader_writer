@@ -1,31 +1,32 @@
 package com.github.aakumykov.cloud_writer
 
 import com.github.aakumykov.cloud_writer.CloudWriter.Companion.ARG_NAME_AUTH_TOKEN
-import com.github.aakumykov.cloud_writer.CloudWriter.Companion.ARG_NAME_ROOT_DIR
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.io.File
 import java.io.IOException
 
 class LocalCloudWriter @AssistedInject constructor(
-    @Assisted(ARG_NAME_ROOT_DIR) private val rootDir: String,
     @Assisted(ARG_NAME_AUTH_TOKEN) private val authToken: String
 ): BasicCloudWriter()
 {
-    @Throws(IOException::class)
-    override fun createDir(dirName: String) {
-        File(dirName).mkdir()
+    @Throws(
+        IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class
+    )
+    override fun createDir(parentDirName: String, childDirName: String) {
+        if (!File(parentDirName, childDirName).mkdir())
+            throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
     }
 
 
-    @Throws(IOException::class)
-    override fun createDirWithParents(dirName: String) {
-        with(dirName) {
-            this.trim()
-            iterateThroughDirHierarchy(rootDir + CloudWriter.DS + this) { nextDirName ->
-                File(nextDirName).mkdirs()
-            }
-        }
+    @Throws(
+        IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class
+    )
+    override fun createDirWithParents(parentDirName: String, childDirName: String) {
+        if (!File(parentDirName, childDirName).mkdirs())
+            throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
     }
 
 
@@ -41,4 +42,7 @@ class LocalCloudWriter @AssistedInject constructor(
             throw IOException("File cannot be not moved from '${file.absolutePath}' to '${fullTargetPath}'")
     }
 
+
+    private fun dirNotCreatedMessage(parentDirName: String, childDirName: String): String
+            = "Directory '${parentDirName}${CloudWriter.DS}${childDirName}' not created."
 }
