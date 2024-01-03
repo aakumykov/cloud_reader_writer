@@ -19,17 +19,19 @@ interface CloudWriter {
     fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean = false)
 
 
-
-    sealed class CloudWriterException(responseCode: Int, responseMessage: String)
-        : Exception("${responseCode}: $responseMessage")
-
-
-    open class UnsuccessfulResponseException(responseCode: Int, responseMessage: String)
-        : CloudWriterException(responseCode, responseMessage)
+    @Throws(IOException::class, UnsuccessfulResponseException::class)
+    fun dirExists(parentDirName: String, childDirName: String): Boolean
 
 
-    class AlreadyExistsException(responseCode: Int, responseMessage: String)
-        : CloudWriterException(responseCode, responseMessage)
+
+    sealed class CloudWriterException(message: String)
+        : Exception(message)
+
+    class UnsuccessfulResponseException(responseCode: Int, responseMessage: String)
+        : CloudWriterException("$responseCode: $responseMessage")
+
+    class AlreadyExistsException(dirName: String)
+        : CloudWriterException(dirName)
 
 
     companion object {

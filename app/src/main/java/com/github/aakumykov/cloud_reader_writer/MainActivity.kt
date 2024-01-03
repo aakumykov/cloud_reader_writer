@@ -51,9 +51,43 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
             yandexAuthenticator.startAuth()
         }
 
+        prepareButtons()
+    }
+
+    private fun prepareButtons() {
         binding.createSimpleCloudDirButton.setOnClickListener { createSimpleCloudDir() }
         binding.createDeepCloudDirButton.setOnClickListener { createDeepCloudDir() }
         binding.createLocalDirButton1.setOnClickListener { permissionsRequester.launch() }
+        binding.checkCloudDirExistsButton.setOnClickListener { checkDirExists(true) }
+        binding.checkLocalDirExistsButton.setOnClickListener { checkDirExists(false) }
+    }
+
+    private fun checkDirExists(isCloud: Boolean) {
+        val cloudWriter = if (isCloud) yandexCloudWriter() else localCloudWriter()
+        val parentDirName: String = if (isCloud) "/" else localMusicDirPath()
+
+        thread {
+            try {
+                resetView()
+                val exists = cloudWriter.dirExists(parentDirName, dirName())
+                showInfo(
+                    when (exists) {
+                        true -> "Папка существует"
+                        false -> "Такой папки нет"
+                    }
+                )
+            } catch (t: Throwable) {
+                showError(t)
+            } finally {
+                hideProgressBar()
+            }
+        }
+    }
+
+    private fun resetView() {
+        hideError()
+        hideInfo()
+        showProgressBar()
     }
 
     override fun onDestroy() {
@@ -64,10 +98,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
     private fun createSimpleCloudDir() {
         thread {
             try {
-                hideError()
-                showProgressBar()
+                resetView()
                 yandexCloudWriter().createDir("/", dirName())
-                showToast("Папка ${dirName()} создана")
+                showInfo("Папка ${dirName()} создана")
             }
             catch (e: CloudWriter.AlreadyExistsException) {
                 showError(Exception("Папка уже существует"))
@@ -84,10 +117,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
     private fun createDeepCloudDir() {
         thread {
             try {
-                hideError()
-                showProgressBar()
+                resetView()
                 yandexCloudWriter().createDirWithParents("/", dirName())
-                showToast("Папка ${dirName()} создана")
+                showInfo("Папка ${dirName()} создана")
             }
             catch(t: Throwable) {
                 showError(t)
@@ -101,10 +133,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
     private fun createLocalDir() {
         thread {
             try {
-                hideError()
-                showProgressBar()
+                resetView()
                 localCloudWriter().createDirWithParents(localMusicDirPath(), dirName())
-                showToast("Папка ${dirName()} создана")
+                showInfo("Папка ${dirName()} создана")
             }
             catch (t: Throwable) {
                 showError(t)
@@ -160,6 +191,24 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
     fun hideError() {
         binding.root.post {
             with(binding.errorView) {
+                text = ""
+                visibility = View.GONE
+            }
+        }
+    }
+
+    private fun showInfo(text: String) {
+        binding.root.post {
+            binding.infoView.apply {
+                visibility = View.VISIBLE
+                setText(text)
+            }
+        }
+    }
+
+    fun hideInfo() {
+        binding.root.post {
+            with(binding.infoView) {
                 text = ""
                 visibility = View.GONE
             }

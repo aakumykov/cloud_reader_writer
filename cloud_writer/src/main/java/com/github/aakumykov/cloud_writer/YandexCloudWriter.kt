@@ -21,12 +21,14 @@ class YandexCloudWriter @AssistedInject constructor(
     @Assisted private val authToken: String
 ) : BasicCloudWriter()
 {
-    @Throws(IOException::class,
+    @Throws(
+        IOException::class,
         CloudWriter.UnsuccessfulResponseException::class,
-        CloudWriter.AlreadyExistsException::class)
+        CloudWriter.AlreadyExistsException::class
+    )
     override fun createDir(parentDirName: String, childDirName: String) {
 
-        val dirName = fixDirSeparators(parentDirName + CloudWriter.DS + childDirName)
+        val dirName = deduplicateDirSeparators(parentDirName + CloudWriter.DS + childDirName)
 
         val url = BASE_URL.toHttpUrl().newBuilder().apply {
             addQueryParameter("path", dirName)
@@ -43,7 +45,7 @@ class YandexCloudWriter @AssistedInject constructor(
         okHttpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 when (response.code) {
-                    409 -> throw CloudWriter.AlreadyExistsException(response.code, dirName)
+                    409 -> throw alreadyExistsException(dirName)
                     else -> throw unsuccessfulResponseException(response)
                 }
             }
@@ -52,8 +54,16 @@ class YandexCloudWriter @AssistedInject constructor(
 
 
     // TODO: игнорировать, если существует
-    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    @Throws(
+        IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.AlreadyExistsException::class
+    )
     override fun createDirWithParents(parentDirName: String, childDirName: String) {
+
+        if (dirExists(parentDirName, childDirName))
+            throw CloudWriter.AlreadyExistsException("${parentDirName}${CloudWriter.DS}${childDirName}")
+
         with(childDirName) {
             this.trim()
             iterateThroughDirHierarchy(this) { nextDirName ->
@@ -72,6 +82,33 @@ class YandexCloudWriter @AssistedInject constructor(
 
         putFileReal(file, uploadURL)
     }
+
+
+    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    override fun dirExists(parentDirName: String, childDirName: String): Boolean {
+
+        val dirName = composePath(parentDirName, childDirName)
+
+        val url = BASE_URL.toHttpUrl().newBuilder().apply {
+            addQueryParameter("path", dirName)
+        }.build()
+
+        val request: Request = Request.Builder()
+            .header("Authorization", authToken)
+            .url(url)
+            .build()
+
+        okHttpClient.newCall(request).execute().use { response ->
+            return when (response.code) {
+                200 -> true
+                404 -> false
+                else -> throw unsuccessfulResponseException(response)
+            }
+        }
+    }
+
+    private fun composePath(parentDirName: String, childDirName: String): String
+        = "${parentDirName}${CloudWriter.DS}${childDirName}".stripMultiSlash()
 
 
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
@@ -115,9 +152,11 @@ class YandexCloudWriter @AssistedInject constructor(
     }
 
 
-    private fun unsuccessfulResponseException(response: Response): Throwable {
-        return CloudWriter.UnsuccessfulResponseException(response.code, response.message)
-    }
+    private fun unsuccessfulResponseException(response: Response): Throwable
+        = CloudWriter.UnsuccessfulResponseException(response.code, response.message)
+
+    private fun alreadyExistsException(dirName: String): CloudWriter.AlreadyExistsException
+            = CloudWriter.AlreadyExistsException(dirName)
 
 
     companion object {
@@ -126,4 +165,8 @@ class YandexCloudWriter @AssistedInject constructor(
     }
 
 
+}
+
+private fun String.stripMultiSlash(): String {
+    return this.replace(Regex("[/]+"),"/")
 }

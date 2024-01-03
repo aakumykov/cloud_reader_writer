@@ -16,7 +16,7 @@ class LocalCloudWriter @AssistedInject constructor(
         CloudWriter.UnsuccessfulResponseException::class
     )
     override fun createDir(parentDirName: String, childDirName: String) {
-        val fullDirName = fixDirSeparators(parentDirName + DS + childDirName)
+        val fullDirName = deduplicateDirSeparators(parentDirName + DS + childDirName)
         if (!File(fullDirName).mkdir())
             throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
     }
@@ -27,7 +27,7 @@ class LocalCloudWriter @AssistedInject constructor(
         CloudWriter.UnsuccessfulResponseException::class
     )
     override fun createDirWithParents(parentDirName: String, childDirName: String) {
-        val fullDirName = fixDirSeparators(parentDirName + DS + childDirName)
+        val fullDirName = deduplicateDirSeparators(parentDirName + DS + childDirName)
         if (!File(fullDirName).mkdirs())
             throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
     }
@@ -43,6 +43,10 @@ class LocalCloudWriter @AssistedInject constructor(
 
         if (!isMoved)
             throw IOException("File cannot be not moved from '${file.absolutePath}' to '${fullTargetPath}'")
+    }
+
+    override fun dirExists(parentDirName: String, childDirName: String): Boolean {
+        return File(parentDirName, childDirName).exists()
     }
 
 

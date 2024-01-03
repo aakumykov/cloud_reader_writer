@@ -1,32 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/yandexAuthButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#ED5E32"
-        android:text="Авторизоваться в Яндекс" />
+    <LinearLayout
 
-    <EditText
-        android:id="@+id/pathInput"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="text"
-        android:hint="Имя папки" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/createSimpleCloudDirButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#42A5F5"
-        android:text="Создать простую облачную папку" />
+        <Button
+            android:id="@+id/yandexAuthButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#ED5E32"
+            android:text="Авторизоваться в Яндекс" />
+
+        <EditText
+            android:id="@+id/pathInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="text"
+            android:hint="Имя папки" />
+
+        <Button
+            android:id="@+id/createSimpleCloudDirButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#42A5F5"
+            android:text="Создать простую облачную папку" />
 
         <Button
             android:id="@+id/createDeepCloudDirButton"
@@ -41,23 +47,45 @@
             android:layout_height="wrap_content"
             android:text="Создать локальную папку" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        <Button
+            android:id="@+id/checkCloudDirExistsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#42A5F5"
+            android:text="Существует в облаке?" />
 
-    <TextView
-        android:id="@+id/errorView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#f00000"
-        android:visibility="gone"
-        tools:text="OLLlNBKA"
-        tools:visibility="visible" />
+        <Button
+            android:id="@+id/checkLocalDirExistsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Существует локально?" />
 
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/errorView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#f00000"
+            android:visibility="gone"
+            tools:text="OLLlNBKA"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/infoView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:text="NYoloPMAU,UR"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</ScrollView>
