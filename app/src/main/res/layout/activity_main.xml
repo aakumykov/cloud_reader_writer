@@ -20,7 +20,7 @@
             android:text="Авторизоваться в Яндекс" />
 
         <EditText
-            android:id="@+id/pathInput"
+            android:id="@+id/dirNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"

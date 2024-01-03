@@ -7,11 +7,11 @@ interface CloudWriter {
 
     // TODO: игнорировать, если существует
     @Throws(IOException::class, UnsuccessfulResponseException::class, AlreadyExistsException::class)
-    fun createDir(parentDirName: String, childDirName: String)
+    fun createSimpleDir(parentDirName: String, childDirName: String)
 
 
     @Throws(IOException::class, UnsuccessfulResponseException::class, AlreadyExistsException::class)
-    fun createDirWithParents(parentDirName: String, childDirName: String)
+    fun createDeepDir(parentDirName: String, childDirName: String)
 
 
     // TODO: AlreadyExistsException
@@ -36,6 +36,7 @@ interface CloudWriter {
 
     companion object {
         const val DS = "/"
+        const val CLOUD_ROOT_DIR = "/"
         const val ARG_NAME_AUTH_TOKEN = "AUTH_TOKEN_ARG"
         const val ARG_NAME_ROOT_DIR = "ROOT_DIR_ARG"
     }

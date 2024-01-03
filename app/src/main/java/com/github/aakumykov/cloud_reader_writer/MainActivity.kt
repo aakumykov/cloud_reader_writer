@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 import com.github.aakumykov.cloud_reader_writer.databinding.ActivityMainBinding
 import com.github.aakumykov.cloud_reader_writer.extentions.getStringFromPreferences
 import com.github.aakumykov.cloud_reader_writer.extentions.storeStringInPreferences
@@ -36,7 +37,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        getStringFromPreferences(DIR_NAME)?.let { binding.pathInput.setText(it) }
+        getStringFromPreferences(DIR_NAME)?.let { binding.dirNameInput.setText(it) }
 
         permissionsRequester = constructPermissionsRequest(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -51,6 +52,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
             yandexAuthenticator.startAuth()
         }
 
+        binding.dirNameInput.addTextChangedListener { saveDirNameInput() }
+        
         prepareButtons()
     }
 
@@ -92,6 +95,10 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
 
     override fun onDestroy() {
         super.onDestroy()
+        saveDirNameInput()
+    }
+
+    private fun saveDirNameInput() {
         storeStringInPreferences(DIR_NAME, dirName())
     }
 
@@ -99,7 +106,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         thread {
             try {
                 resetView()
-                yandexCloudWriter().createDir("/", dirName())
+                yandexCloudWriter().createSimpleDir("/", dirName())
                 showInfo("Папка ${dirName()} создана")
             }
             catch (e: CloudWriter.AlreadyExistsException) {
@@ -118,7 +125,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         thread {
             try {
                 resetView()
-                yandexCloudWriter().createDirWithParents("/", dirName())
+                yandexCloudWriter().createDeepDir("/", dirName())
                 showInfo("Папка ${dirName()} создана")
             }
             catch(t: Throwable) {
@@ -134,7 +141,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         thread {
             try {
                 resetView()
-                localCloudWriter().createDirWithParents(localMusicDirPath(), dirName())
+                localCloudWriter().createDeepDir(localMusicDirPath(), dirName())
                 showInfo("Папка ${dirName()} создана")
             }
             catch (t: Throwable) {
@@ -154,7 +161,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
 
     private fun localCloudWriter(): CloudWriter = LocalCloudWriter("")
 
-    private fun dirName(): String = binding.pathInput.text.toString()
+    private fun dirName(): String = binding.dirNameInput.text.toString()
 
     private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(OkHttpClient.Builder().build(), Gson(), yandexAuthToken!!)
 

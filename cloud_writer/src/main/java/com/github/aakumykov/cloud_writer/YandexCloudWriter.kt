@@ -1,5 +1,6 @@
 package com.github.aakumykov.cloud_writer
 
+import android.util.Log
 import com.google.gson.Gson
 import com.yandex.disk.rest.json.Link
 import dagger.assisted.Assisted
@@ -26,12 +27,18 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.UnsuccessfulResponseException::class,
         CloudWriter.AlreadyExistsException::class
     )
-    override fun createDir(parentDirName: String, childDirName: String) {
+    override fun createSimpleDir(parentDirName: String, childDirName: String) {
 
-        val dirName = deduplicateDirSeparators(parentDirName + CloudWriter.DS + childDirName)
+        if (childDirName.contains(CloudWriter.DS))
+            throw IllegalArgumentException("childDirName parameter cannot contains dir separators, it must be single-level directory name.")
+
+        if (!dirExists(CloudWriter.CLOUD_ROOT_DIR,parentDirName))
+            throw IllegalArgumentException("Parent dir must exists on server; you should use createDeepDir() method to create dir and its parent dirs.")
+
+        val fullDirName = composePath(parentDirName, childDirName)
 
         val url = BASE_URL.toHttpUrl().newBuilder().apply {
-            addQueryParameter("path", dirName)
+            addQueryParameter("path", fullDirName)
         }.build()
 
         val requestBody = "".toRequestBody(null)
@@ -45,7 +52,7 @@ class YandexCloudWriter @AssistedInject constructor(
         okHttpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 when (response.code) {
-                    409 -> throw alreadyExistsException(dirName)
+                    409 -> throw alreadyExistsException(fullDirName)
                     else -> throw unsuccessfulResponseException(response)
                 }
             }
@@ -59,7 +66,7 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.UnsuccessfulResponseException::class,
         CloudWriter.AlreadyExistsException::class
     )
-    override fun createDirWithParents(parentDirName: String, childDirName: String) {
+    override fun createDeepDir(parentDirName: String, childDirName: String) {
 
         if (dirExists(parentDirName, childDirName))
             throw CloudWriter.AlreadyExistsException("${parentDirName}${CloudWriter.DS}${childDirName}")
@@ -67,13 +74,20 @@ class YandexCloudWriter @AssistedInject constructor(
         with(childDirName) {
             this.trim()
             iterateThroughDirHierarchy(this) { nextDirName ->
-                createDir(parentDirName, nextDirName)
+                try {
+                    createSimpleDir(parentDirName, nextDirName)
+                } catch (e: CloudWriter.AlreadyExistsException) {
+                    Log.d(TAG, "Каталог '${composePath(parentDirName, childDirName)}' уже существует.")
+                }
             }
         }
     }
 
 
-    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    @Throws(
+        IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class
+    )
     override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
 
         val fullTargetPath = "${targetDirPath}/${file.name}".replace(Regex("[/]+"),"/")
@@ -106,9 +120,6 @@ class YandexCloudWriter @AssistedInject constructor(
             }
         }
     }
-
-    private fun composePath(parentDirName: String, childDirName: String): String
-        = "${parentDirName}${CloudWriter.DS}${childDirName}".stripMultiSlash()
 
 
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
@@ -160,13 +171,10 @@ class YandexCloudWriter @AssistedInject constructor(
 
 
     companion object {
+        val TAG: String = YandexCloudWriter::class.java.simpleName
         private const val BASE_URL = "https://cloud-api.yandex.net/v1/disk/resources"
         private const val DEFAULT_MEDIA_TYPE = "application/octet-stream"
     }
 
 
-}
-
-private fun String.stripMultiSlash(): String {
-    return this.replace(Regex("[/]+"),"/")
 }

@@ -20,10 +20,15 @@ abstract class BasicCloudWriter : CloudWriter {
     }
 
 
-    @Deprecated("Следить вручную...")
-    fun deduplicateDirSeparators(dirName: String): String  = dirName.replace(Regex("[/]+"), "/")
+    protected fun composePath(parentDirName: String, childDirName: String): String
+            = "${parentDirName}${CloudWriter.DS}${childDirName}".stripMultiSlash()
+
 
     companion object {
         private const val DS = "/"
     }
+}
+
+private fun String.stripMultiSlash(): String {
+    return this.replace(Regex("/+"),"/")
 }
