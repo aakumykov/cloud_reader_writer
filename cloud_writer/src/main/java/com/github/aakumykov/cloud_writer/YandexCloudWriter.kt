@@ -29,11 +29,11 @@ class YandexCloudWriter @AssistedInject constructor(
     )
     override fun createSimpleDir(parentDirName: String, childDirName: String) {
 
-        if (childDirName.contains(CloudWriter.DS))
-            throw IllegalArgumentException("childDirName parameter cannot contains dir separators, it must be single-level directory name.")
-
-        if (!dirExists(CloudWriter.CLOUD_ROOT_DIR,parentDirName))
-            throw IllegalArgumentException("Parent dir must exists on server; you should use createDeepDir() method to create dir and its parent dirs.")
+//        if (childDirName.contains(CloudWriter.DS))
+//            throw IllegalArgumentException("childDirName parameter cannot contains dir separators, it must be single-level directory name.")
+//
+//        if (!dirExists(CloudWriter.CLOUD_ROOT_DIR,parentDirName))
+//            throw IllegalArgumentException("Parent dir must exists on server; you should use createDeepDir() method to create dir and its parent dirs.")
 
         val fullDirName = composePath(parentDirName, childDirName)
 
@@ -50,11 +50,10 @@ class YandexCloudWriter @AssistedInject constructor(
             .build()
 
         okHttpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                when (response.code) {
-                    409 -> throw alreadyExistsException(fullDirName)
-                    else -> throw unsuccessfulResponseException(response)
-                }
+            when (response.code) {
+                201 -> return
+                409 -> throw alreadyExistsException(fullDirName)
+                else -> throw unsuccessfulResponseException(response)
             }
         }
     }
