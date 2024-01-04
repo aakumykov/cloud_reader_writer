@@ -27,38 +27,49 @@
             android:inputType="text"
             android:hint="Имя папки" />
 
-        <Button
-            android:id="@+id/createSimpleCloudDirButton"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="#42A5F5"
-            android:text="Создать простую облачную папку" />
+            android:orientation="horizontal">
 
         <Button
-            android:id="@+id/createDeepCloudDirButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:id="@+id/createCloudDirButton"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:backgroundTint="#66BB6A"
-            android:text="Создать глубокую облачную папку" />
-
-        <Button
-            android:id="@+id/createLocalDirButton1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Создать локальную папку" />
+            android:text="Создать облачную папку" />
 
         <Button
             android:id="@+id/checkCloudDirExistsButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
             android:backgroundTint="#42A5F5"
-            android:text="Существует в облаке?" />
+            android:text="Существует?" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/createLocalDirButton1"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Создать локальную папку" />
 
         <Button
             android:id="@+id/checkLocalDirExistsButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Существует локально?" />
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:backgroundTint="#FFA726"
+            android:text="Существует?" />
+
+    </LinearLayout>
 
         <ProgressBar
             android:id="@+id/progressBar"

@@ -58,8 +58,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
     }
 
     private fun prepareButtons() {
-        binding.createSimpleCloudDirButton.setOnClickListener { createSimpleCloudDir() }
-        binding.createDeepCloudDirButton.setOnClickListener { createDeepCloudDir() }
+        binding.createCloudDirButton.setOnClickListener { createCloudDir() }
         binding.createLocalDirButton1.setOnClickListener { permissionsRequester.launch() }
         binding.checkCloudDirExistsButton.setOnClickListener { checkDirExists(true) }
         binding.checkLocalDirExistsButton.setOnClickListener { checkDirExists(false) }
@@ -102,31 +101,15 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         storeStringInPreferences(DIR_NAME, dirName())
     }
 
-    private fun createSimpleCloudDir() {
+    private fun createCloudDir() {
         thread {
             try {
                 resetView()
-                yandexCloudWriter().createSimpleDir("/", dirName())
+                yandexCloudWriter().createDir("/", dirName())
                 showInfo("Папка ${dirName()} создана")
             }
-            catch (e: CloudWriter.AlreadyExistsException) {
-                showError(Exception("Папка уже существует"))
-            }
-            catch(t: Throwable) {
-                showError(t)
-            }
-            finally {
-                hideProgressBar()
-            }
-        }
-    }
-
-    private fun createDeepCloudDir() {
-        thread {
-            try {
-                resetView()
-                yandexCloudWriter().createDeepDir("/", dirName())
-                showInfo("Папка ${dirName()} создана")
+            catch(e: CloudWriter.AlreadyExistsException) {
+                showError("Папка уже существует")
             }
             catch(t: Throwable) {
                 showError(t)
@@ -141,7 +124,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         thread {
             try {
                 resetView()
-                localCloudWriter().createDeepDir(localMusicDirPath(), dirName())
+                localCloudWriter().createDir(localMusicDirPath(), dirName())
                 showInfo("Папка ${dirName()} создана")
             }
             catch (t: Throwable) {
@@ -185,17 +168,21 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
     }
 
     private fun showError(throwable: Throwable) {
+        val errorMsg = ExceptionUtils.getErrorMessage(throwable)
+        Log.e(TAG, errorMsg, throwable)
+        showError(errorMsg)
+    }
+
+    private fun showError(errorMsg: String) {
         binding.root.post {
-            val errorMsg = ExceptionUtils.getErrorMessage(throwable)
             with(binding.errorView) {
                 text = errorMsg
                 visibility = View.VISIBLE
             }
-            Log.e(TAG, errorMsg, throwable)
         }
     }
 
-    fun hideError() {
+    private fun hideError() {
         binding.root.post {
             with(binding.errorView) {
                 text = ""

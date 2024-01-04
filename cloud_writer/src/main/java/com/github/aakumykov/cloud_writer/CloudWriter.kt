@@ -5,13 +5,8 @@ import java.io.IOException
 
 interface CloudWriter {
 
-    // TODO: игнорировать, если существует
     @Throws(IOException::class, UnsuccessfulResponseException::class, AlreadyExistsException::class)
-    fun createSimpleDir(parentDirName: String, childDirName: String)
-
-
-    @Throws(IOException::class, UnsuccessfulResponseException::class, AlreadyExistsException::class)
-    fun createDeepDir(parentDirName: String, childDirName: String)
+    fun createDir(parentDirName: String, childDirName: String)
 
 
     // TODO: AlreadyExistsException
@@ -19,6 +14,7 @@ interface CloudWriter {
     fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean = false)
 
 
+    // TODO: не нужна
     @Throws(IOException::class, UnsuccessfulResponseException::class)
     fun dirExists(parentDirName: String, childDirName: String): Boolean
 

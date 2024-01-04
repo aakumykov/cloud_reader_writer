@@ -10,7 +10,7 @@ class LocalCloudWriter @AssistedInject constructor(
     @Assisted(ARG_NAME_AUTH_TOKEN) private val authToken: String
 ): BasicCloudWriter()
 {
-    @Throws(
+    /*@Throws(
         IOException::class,
         CloudWriter.UnsuccessfulResponseException::class
     )
@@ -18,14 +18,14 @@ class LocalCloudWriter @AssistedInject constructor(
         val fullDirName = composePath(parentDirName, childDirName)
         if (!File(fullDirName).mkdir())
             throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
-    }
+    }*/
 
 
     @Throws(
         IOException::class,
         CloudWriter.UnsuccessfulResponseException::class
     )
-    override fun createDeepDir(parentDirName: String, childDirName: String) {
+    override fun createDir(parentDirName: String, childDirName: String) {
         val fullDirName = composePath(parentDirName, childDirName)
         if (!File(fullDirName).mkdirs())
             throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))

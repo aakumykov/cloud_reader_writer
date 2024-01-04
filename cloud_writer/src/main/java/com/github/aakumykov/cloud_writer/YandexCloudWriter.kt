@@ -22,23 +22,61 @@ class YandexCloudWriter @AssistedInject constructor(
     @Assisted private val authToken: String
 ) : BasicCloudWriter()
 {
+    // TODO: проверить с разными аргументами
     @Throws(
         IOException::class,
         CloudWriter.UnsuccessfulResponseException::class,
         CloudWriter.AlreadyExistsException::class
     )
-    override fun createSimpleDir(parentDirName: String, childDirName: String) {
+    override fun createDir(parentDirName: String, childDirName: String) {
+        if (!childDirName.contains(CloudWriter.DS)) createOneLevelDir(composePath(parentDirName, childDirName))
+        else createMultiLevelDir(parentDirName, childDirName)
+    }
 
-//        if (childDirName.contains(CloudWriter.DS))
-//            throw IllegalArgumentException("childDirName parameter cannot contains dir separators, it must be single-level directory name.")
-//
-//        if (!dirExists(CloudWriter.CLOUD_ROOT_DIR,parentDirName))
-//            throw IllegalArgumentException("Parent dir must exists on server; you should use createDeepDir() method to create dir and its parent dirs.")
 
-        val fullDirName = composePath(parentDirName, childDirName)
+    @Throws(
+        IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.AlreadyExistsException::class
+    )
+    private fun createMultiLevelDir(parentDirName: String, childDirName: String) {
+
+        if (dirExists(parentDirName, childDirName))
+            throw CloudWriter.AlreadyExistsException(childDirName)
+
+        var pathToCreate = ""
+
+        childDirName.split(CloudWriter.DS).forEach { dirName ->
+
+            pathToCreate += CloudWriter.DS + dirName
+
+            try {
+                createOneLevelDir(parentDirName, pathToCreate)
+            } catch (e: CloudWriter.AlreadyExistsException) {
+                Log.d(TAG, "Dir '$pathToCreate' already exists.")
+            }
+        }
+    }
+
+
+    @Throws(
+        IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.AlreadyExistsException::class
+    )
+    private fun createOneLevelDir(parentDirName: String, childDirName: String) {
+        createOneLevelDir(composePath(parentDirName, childDirName))
+    }
+
+    @Throws(
+        IOException::class,
+        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.AlreadyExistsException::class
+    )
+    private fun createOneLevelDir(absoluteDirPath: String) {
 
         val url = BASE_URL.toHttpUrl().newBuilder().apply {
-            addQueryParameter("path", fullDirName)
+            addQueryParameter("path", absoluteDirPath)
         }.build()
 
         val requestBody = "".toRequestBody(null)
@@ -52,36 +90,11 @@ class YandexCloudWriter @AssistedInject constructor(
         okHttpClient.newCall(request).execute().use { response ->
             when (response.code) {
                 201 -> return
-                409 -> throw alreadyExistsException(fullDirName)
+                409 -> throw alreadyExistsException(absoluteDirPath)
                 else -> throw unsuccessfulResponseException(response)
             }
         }
     }
-
-
-    // TODO: игнорировать, если существует
-    @Throws(
-        IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class,
-        CloudWriter.AlreadyExistsException::class
-    )
-    override fun createDeepDir(parentDirName: String, childDirName: String) {
-
-        if (dirExists(parentDirName, childDirName))
-            throw CloudWriter.AlreadyExistsException("${parentDirName}${CloudWriter.DS}${childDirName}")
-
-        with(childDirName) {
-            this.trim()
-            iterateThroughDirHierarchy(this) { nextDirName ->
-                try {
-                    createSimpleDir(parentDirName, nextDirName)
-                } catch (e: CloudWriter.AlreadyExistsException) {
-                    Log.d(TAG, "Каталог '${composePath(parentDirName, childDirName)}' уже существует.")
-                }
-            }
-        }
-    }
-
 
     @Throws(
         IOException::class,
@@ -119,6 +132,10 @@ class YandexCloudWriter @AssistedInject constructor(
             }
         }
     }
+
+
+
+
 
 
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
