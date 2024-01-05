@@ -14,6 +14,9 @@ import com.github.aakumykov.cloud_reader_writer.extentions.storeStringInPreferen
 import com.github.aakumykov.cloud_writer.CloudWriter
 import com.github.aakumykov.cloud_writer.LocalCloudWriter
 import com.github.aakumykov.cloud_writer.YandexCloudWriter
+import com.github.aakumykov.file_lister_navigator_selector.file_selector.FileSelector
+import com.github.aakumykov.file_lister_navigator_selector.fs_item.FSItem
+import com.github.aakumykov.file_lister_navigator_selector.local_file_selector.LocalFileSelector
 import com.github.aakumykov.kotlin_playground.cloud_authenticator.CloudAuthenticator
 import com.github.aakumykov.kotlin_playground.cloud_authenticator.YandexAuthenticator
 import com.gitlab.aakumykov.exception_utils_module.ExceptionUtils
@@ -24,12 +27,15 @@ import permissions.dispatcher.ktx.PermissionsRequester
 import permissions.dispatcher.ktx.constructPermissionsRequest
 import kotlin.concurrent.thread
 
-class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
+class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSelector.Callback {
 
     private lateinit var binding: ActivityMainBinding
     private var yandexAuthToken: String? = null
     private lateinit var yandexAuthenticator: CloudAuthenticator
     private lateinit var permissionsRequester: PermissionsRequester
+    private val fileSelector: FileSelector by lazy {
+        LocalFileSelector.create(this).show(supportFragmentManager)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +68,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         binding.createLocalDirButton1.setOnClickListener { permissionsRequester.launch() }
         binding.checkCloudDirExistsButton.setOnClickListener { checkDirExists(true) }
         binding.checkLocalDirExistsButton.setOnClickListener { checkDirExists(false) }
+        binding.selectFileButton.setOnClickListener {
+            fileSelector.setCallback(this)
+        }
     }
 
     private fun checkDirExists(isCloud: Boolean) {
@@ -216,5 +225,10 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         val TAG: String = MainActivity::class.java.simpleName
         const val YANDEX_AUTH_TOKEN = "AUTH_TOKEN"
         const val DIR_NAME = "DIR_NAME"
+    }
+
+    override fun onFilesSelected(selectedItemsList: List<FSItem>) {
+        fileSelector.unsetCallback()
+
     }
 }

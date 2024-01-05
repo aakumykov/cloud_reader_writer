@@ -80,6 +80,14 @@
             android:visibility="gone"
             tools:visibility="visible" />
 
+        <Button
+            android:id="@+id/selectFileButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#9CCC65"
+            android:text="Выбрать файл" />
+
+
         <TextView
             android:id="@+id/errorView"
             android:layout_width="match_parent"
