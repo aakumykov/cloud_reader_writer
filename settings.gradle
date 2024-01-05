@@ -18,3 +18,6 @@ dependencyResolutionManagement {
 rootProject.name = "cloud_reader_writer"
 include ':app'
 include ':cloud_writer'
+include ':file_lister_navigator_selector'
+
+project(":file_lister_navigator_selector").projectDir = new File("../file_lister_navigator_selector/lib")
