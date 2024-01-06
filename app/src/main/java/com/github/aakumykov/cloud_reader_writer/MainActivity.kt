@@ -25,16 +25,18 @@ import com.yandex.authsdk.internal.strategy.LoginType
 import okhttp3.OkHttpClient
 import permissions.dispatcher.ktx.PermissionsRequester
 import permissions.dispatcher.ktx.constructPermissionsRequest
+import java.io.File
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSelector.Callback {
 
+    private var selectedFile: FSItem? = null
     private lateinit var binding: ActivityMainBinding
     private var yandexAuthToken: String? = null
     private lateinit var yandexAuthenticator: CloudAuthenticator
     private lateinit var permissionsRequester: PermissionsRequester
     private val fileSelector: FileSelector by lazy {
-        LocalFileSelector.create(this).show(supportFragmentManager)
+        LocalFileSelector.create(callback = this, startPath = downloadsDirPath())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,10 +70,73 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         binding.createLocalDirButton1.setOnClickListener { permissionsRequester.launch() }
         binding.checkCloudDirExistsButton.setOnClickListener { checkDirExists(true) }
         binding.checkLocalDirExistsButton.setOnClickListener { checkDirExists(false) }
-        binding.selectFileButton.setOnClickListener {
-            fileSelector.setCallback(this)
+
+        binding.selectFileButton.setOnClickListener { pickFile() }
+        binding.uploadFileButton.setOnClickListener { uploadFile() }
+        binding.checkUploadedFileButton.setOnClickListener { checkUploadedFile() }
+    }
+
+    private fun checkUploadedFile() {
+
+        if (null == selectedFile) {
+            showError("Выберите файл")
+            return
+        }
+
+        thread {
+            resetView()
+            showProgressBar()
+            try {
+                val exists = cloudWriter().fileExists("/", selectedFile!!.name)
+                val isExistsWord = if (exists) "существует" else "не существует"
+                showInfo("Файл '${selectedFile!!.name}' $isExistsWord")
+            }
+            catch (t: Throwable) {
+                showError(t)
+            }
+            finally {
+                hideProgressBar()
+            }
         }
     }
+
+    private fun pickFile() {
+        with(fileSelector) {
+            setCallback(this@MainActivity)
+            show(supportFragmentManager)
+        }
+    }
+
+
+    private fun uploadFile() {
+        thread {
+            resetView()
+            showProgressBar()
+            try {
+                selectedFile?.also {
+                    cloudWriter().putFile(
+                        File(it.absolutePath),
+                        "/",
+                        true
+                    )
+                    showInfo("Файл загружен")
+                }
+            }
+            catch (e: CloudWriter.AlreadyExistsException) {
+                showError("Файл ужо существует")
+            }
+            catch (t: Throwable) {
+                showError(t)
+            }
+            finally {
+                hideProgressBar()
+            }
+        }
+    }
+
+    private fun cloudWriter(): CloudWriter =
+        if (binding.cloudTypeToggleButton.isChecked) yandexCloudWriter()
+        else localCloudWriter()
 
     private fun checkDirExists(isCloud: Boolean) {
         val cloudWriter = if (isCloud) yandexCloudWriter() else localCloudWriter()
@@ -80,7 +145,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         thread {
             try {
                 resetView()
-                val exists = cloudWriter.dirExists(parentDirName, dirName())
+                showProgressBar()
+                val exists = cloudWriter.fileExists(parentDirName, dirName())
                 showInfo(
                     when (exists) {
                         true -> "Папка существует"
@@ -98,7 +164,6 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     private fun resetView() {
         hideError()
         hideInfo()
-        showProgressBar()
     }
 
     override fun onDestroy() {
@@ -114,6 +179,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         thread {
             try {
                 resetView()
+                showProgressBar()
                 yandexCloudWriter().createDir("/", dirName())
                 showInfo("Папка ${dirName()} создана")
             }
@@ -133,6 +199,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         thread {
             try {
                 resetView()
+                showProgressBar()
                 localCloudWriter().createDir(localMusicDirPath(), dirName())
                 showInfo("Папка ${dirName()} создана")
             }
@@ -225,10 +292,15 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         val TAG: String = MainActivity::class.java.simpleName
         const val YANDEX_AUTH_TOKEN = "AUTH_TOKEN"
         const val DIR_NAME = "DIR_NAME"
+        const val SELECTED_FILE = "SELECTED_FILE"
     }
 
     override fun onFilesSelected(selectedItemsList: List<FSItem>) {
         fileSelector.unsetCallback()
-
+        selectedFile = selectedItemsList[0]
+        showInfo("Выбран файл '${selectedFile?.name}'")
     }
+
+    private fun downloadsDirPath(): String =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
 }

@@ -44,8 +44,8 @@ class LocalCloudWriter @AssistedInject constructor(
             throw IOException("File cannot be not moved from '${file.absolutePath}' to '${fullTargetPath}'")
     }
 
-    override fun dirExists(parentDirName: String, childDirName: String): Boolean {
-        return File(parentDirName, childDirName).exists()
+    override fun fileExists(parentDirName: String, childName: String): Boolean {
+        return File(parentDirName, childName).exists()
     }
 
 

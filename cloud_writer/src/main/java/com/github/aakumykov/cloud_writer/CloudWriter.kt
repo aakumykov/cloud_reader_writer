@@ -16,7 +16,7 @@ interface CloudWriter {
 
     // TODO: не нужна
     @Throws(IOException::class, UnsuccessfulResponseException::class)
-    fun dirExists(parentDirName: String, childDirName: String): Boolean
+    fun fileExists(parentDirName: String, childName: String): Boolean
 
 
 

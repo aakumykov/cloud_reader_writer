@@ -41,7 +41,7 @@ class YandexCloudWriter @AssistedInject constructor(
     )
     private fun createMultiLevelDir(parentDirName: String, childDirName: String) {
 
-        if (dirExists(parentDirName, childDirName))
+        if (fileExists(parentDirName, childDirName))
             throw CloudWriter.AlreadyExistsException(childDirName)
 
         var pathToCreate = ""
@@ -111,9 +111,9 @@ class YandexCloudWriter @AssistedInject constructor(
 
 
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
-    override fun dirExists(parentDirName: String, childDirName: String): Boolean {
+    override fun fileExists(parentDirName: String, childName: String): Boolean {
 
-        val dirName = composePath(parentDirName, childDirName)
+        val dirName = composePath(parentDirName, childName)
 
         val url = BASE_URL.toHttpUrl().newBuilder().apply {
             addQueryParameter("path", dirName)
