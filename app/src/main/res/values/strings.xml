@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">cloud_reader_writer</string>
+    <string name="do_not_overwrite">Не перезаписывать</string>
+    <string name="overwrite">Перезаписать</string>
 </resources>

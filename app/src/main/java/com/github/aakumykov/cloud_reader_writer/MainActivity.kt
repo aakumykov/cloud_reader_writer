@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
 
         permissionsRequester = constructPermissionsRequest(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            requiresPermission = ::createLocalDir
+            requiresPermission = ::createLocalDirReal
         )
 
         yandexAuthenticator = YandexAuthenticator(this, LoginType.NATIVE, this)
@@ -66,14 +66,21 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     }
 
     private fun prepareButtons() {
-        binding.createCloudDirButton.setOnClickListener { createCloudDir() }
-        binding.createLocalDirButton1.setOnClickListener { permissionsRequester.launch() }
-        binding.checkCloudDirExistsButton.setOnClickListener { checkDirExists(true) }
-        binding.checkLocalDirExistsButton.setOnClickListener { checkDirExists(false) }
-
+        binding.overwriteSwitch.setOnCheckedChangeListener { _, isChecked ->
+            binding.overwriteSwitch.setText(if(isChecked) R.string.overwrite else R.string.do_not_overwrite)
+        }
+        binding.createDirButton.setOnClickListener { createDir() }
+        binding.checkDirExistsButton.setOnClickListener { checkDirExists(toggled()) }
         binding.selectFileButton.setOnClickListener { pickFile() }
         binding.uploadFileButton.setOnClickListener { uploadFile() }
         binding.checkUploadedFileButton.setOnClickListener { checkUploadedFile() }
+    }
+
+    private fun createDir() {
+        if (toggled())
+            createCloudDir()
+        else
+            createLocalDir()
     }
 
     private fun checkUploadedFile() {
@@ -87,7 +94,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             resetView()
             showProgressBar()
             try {
-                val exists = cloudWriter().fileExists("/", selectedFile!!.name)
+                val exists = cloudWriter().fileExists(targetDir(), selectedFile!!.name)
                 val isExistsWord = if (exists) "существует" else "не существует"
                 showInfo("Файл '${selectedFile!!.name}' $isExistsWord")
             }
@@ -99,6 +106,13 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             }
         }
     }
+
+    private fun targetDir(): String
+        = if (toggled()) CANONICAL_ROOT_PATH else localMusicDirPath()
+
+
+    private fun toggled(): Boolean = binding.cloudTypeToggleButton.isChecked
+
 
     private fun pickFile() {
         with(fileSelector) {
@@ -117,7 +131,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
                     cloudWriter().putFile(
                         File(it.absolutePath),
                         "/",
-                        true
+                        isOverwrite()
                     )
                     showInfo("Файл загружен")
                 }
@@ -133,6 +147,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             }
         }
     }
+
+    private fun isOverwrite(): Boolean = binding.overwriteSwitch.isChecked
 
     private fun cloudWriter(): CloudWriter =
         if (binding.cloudTypeToggleButton.isChecked) yandexCloudWriter()
@@ -196,6 +212,10 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     }
 
     private fun createLocalDir() {
+        permissionsRequester.launch()
+    }
+
+    private fun createLocalDirReal() {
         thread {
             try {
                 resetView()
@@ -293,6 +313,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         const val YANDEX_AUTH_TOKEN = "AUTH_TOKEN"
         const val DIR_NAME = "DIR_NAME"
         const val SELECTED_FILE = "SELECTED_FILE"
+        const val CANONICAL_ROOT_PATH = "/"
     }
 
     override fun onFilesSelected(selectedItemsList: List<FSItem>) {

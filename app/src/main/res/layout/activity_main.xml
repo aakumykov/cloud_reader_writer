@@ -12,6 +12,23 @@
         android:orientation="vertical"
         tools:context=".MainActivity">
 
+        <ToggleButton
+            android:id="@+id/cloudTypeToggleButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="ToggleButton"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textOff="Локальное &quot;облако&quot;"
+            android:textOn="Яндекс.Диск" />
+
+
+        <Switch
+            android:id="@+id/overwriteSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/do_not_overwrite" />
+
         <Button
             android:id="@+id/yandexAuthButton"
             android:layout_width="match_parent"
@@ -33,36 +50,14 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/createCloudDirButton"
+                android:id="@+id/createDirButton"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:backgroundTint="#66BB6A"
-                android:text="Создать облачную папку" />
+                android:text="Создать папку" />
 
             <Button
-                android:id="@+id/checkCloudDirExistsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:backgroundTint="#66BB6A"
-                android:text="?" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/createLocalDirButton1"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="Создать локальную папку" />
-
-            <Button
-                android:id="@+id/checkLocalDirExistsButton"
+                android:id="@+id/checkDirExistsButton"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
@@ -70,15 +65,6 @@
 
         </LinearLayout>
 
-        <ToggleButton
-            android:id="@+id/cloudTypeToggleButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="ToggleButton"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textOff="Локальное &quot;облако&quot;"
-            android:textOn="Яндекс.Диск" />
 
         <LinearLayout
             android:layout_width="match_parent"
