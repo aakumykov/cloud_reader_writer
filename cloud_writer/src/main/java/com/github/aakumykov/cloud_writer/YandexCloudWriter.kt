@@ -102,7 +102,7 @@ class YandexCloudWriter @AssistedInject constructor(
     )
     override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
 
-        val fullTargetPath = "${targetDirPath}/${file.name}".replace(Regex("[/]+"),"/")
+        val fullTargetPath = "${targetDirPath}/${file.name}".stripExtraSlashes()
 
         val uploadURL = getURLForUpload(fullTargetPath, overwriteIfExists)
 

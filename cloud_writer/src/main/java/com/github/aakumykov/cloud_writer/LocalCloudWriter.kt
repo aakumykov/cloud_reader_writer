@@ -10,17 +10,6 @@ class LocalCloudWriter @AssistedInject constructor(
     @Assisted(ARG_NAME_AUTH_TOKEN) private val authToken: String
 ): BasicCloudWriter()
 {
-    /*@Throws(
-        IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class
-    )
-    override fun createSimpleDir(parentDirName: String, childDirName: String) {
-        val fullDirName = composePath(parentDirName, childDirName)
-        if (!File(fullDirName).mkdir())
-            throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
-    }*/
-
-
     @Throws(
         IOException::class,
         CloudWriter.UnsuccessfulResponseException::class
@@ -35,7 +24,7 @@ class LocalCloudWriter @AssistedInject constructor(
     @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
     override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
 
-        val fullTargetPath = "${targetDirPath}/${file.name}".replace(Regex("[/]+"),"/")
+        val fullTargetPath = "${targetDirPath}/${file.name}".stripExtraSlashes()
         val targetFile = File(fullTargetPath)
 
         val isMoved = file.renameTo(targetFile)
@@ -44,6 +33,7 @@ class LocalCloudWriter @AssistedInject constructor(
             throw IOException("File cannot be not moved from '${file.absolutePath}' to '${fullTargetPath}'")
     }
 
+    
     override fun fileExists(parentDirName: String, childName: String): Boolean {
         return File(parentDirName, childName).exists()
     }
