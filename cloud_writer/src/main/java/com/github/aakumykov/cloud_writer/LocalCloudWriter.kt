@@ -12,12 +12,20 @@ class LocalCloudWriter @AssistedInject constructor(
 {
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class
+        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.AlreadyExistsException::class
     )
     override fun createDir(parentDirName: String, childDirName: String) {
+
         val fullDirName = composePath(parentDirName, childDirName)
-        if (!File(fullDirName).mkdirs())
-            throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
+
+        with(File(fullDirName)) {
+            if (exists())
+                throw CloudWriter.AlreadyExistsException(childDirName)
+
+            if (!mkdirs())
+                throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(parentDirName, childDirName))
+        }
     }
 
 
