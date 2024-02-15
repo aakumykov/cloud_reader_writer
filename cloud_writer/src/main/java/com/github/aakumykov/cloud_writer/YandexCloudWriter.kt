@@ -28,9 +28,9 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.UnsuccessfulResponseException::class,
         CloudWriter.AlreadyExistsException::class
     )
-    override fun createDir(parentDirName: String, childDirName: String) {
-        if (!childDirName.contains(CloudWriter.DS)) createOneLevelDir(composePath(parentDirName, childDirName))
-        else createMultiLevelDir(parentDirName, childDirName)
+    override fun createDir(basePath: String, dirName: String) {
+        if (!dirName.contains(CloudWriter.DS)) createOneLevelDir(composePath(basePath, dirName))
+        else createMultiLevelDir(basePath, dirName)
     }
 
 

@@ -5,13 +5,12 @@ import java.io.IOException
 
 interface CloudWriter {
 
-    // TODO: baseDirPath, dirName
     @Throws(
         IOException::class,
         UnsuccessfulResponseException::class,
         AlreadyExistsException::class
     )
-    fun createDir(parentDirName: String, childDirName: String)
+    fun createDir(basePath: String, dirName: String)
 
 
     // TODO: AlreadyExistsException
