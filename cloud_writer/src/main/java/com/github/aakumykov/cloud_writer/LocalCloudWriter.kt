@@ -12,7 +12,7 @@ class LocalCloudWriter @AssistedInject constructor(
 {
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.UnsuccessfulOperationException::class,
         CloudWriter.AlreadyExistsException::class
     )
     override fun createDir(basePath: String, dirName: String) {
@@ -24,12 +24,12 @@ class LocalCloudWriter @AssistedInject constructor(
                 throw CloudWriter.AlreadyExistsException(dirName)
 
             if (!mkdirs())
-                throw CloudWriter.UnsuccessfulResponseException(0, dirNotCreatedMessage(basePath, dirName))
+                throw CloudWriter.UnsuccessfulOperationException(0, dirNotCreatedMessage(basePath, dirName))
         }
     }
 
 
-    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    @Throws(IOException::class, CloudWriter.UnsuccessfulOperationException::class)
     override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
 
         val fullTargetPath = "${targetDirPath}/${file.name}".stripExtraSlashes()
@@ -45,7 +45,6 @@ class LocalCloudWriter @AssistedInject constructor(
     override fun fileExists(parentDirName: String, childName: String): Boolean {
         return File(parentDirName, childName).exists()
     }
-
 
     private fun dirNotCreatedMessage(parentDirName: String, childDirName: String): String
             = "Directory '${parentDirName}${CloudWriter.DS}${childDirName}' not created."

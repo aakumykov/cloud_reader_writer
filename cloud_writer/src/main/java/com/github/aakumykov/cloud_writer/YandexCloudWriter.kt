@@ -25,7 +25,7 @@ class YandexCloudWriter @AssistedInject constructor(
     // TODO: проверить с разными аргументами
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.UnsuccessfulOperationException::class,
         CloudWriter.AlreadyExistsException::class
     )
     override fun createDir(basePath: String, dirName: String) {
@@ -36,7 +36,7 @@ class YandexCloudWriter @AssistedInject constructor(
 
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.UnsuccessfulOperationException::class,
         CloudWriter.AlreadyExistsException::class
     )
     private fun createMultiLevelDir(parentDirName: String, childDirName: String) {
@@ -61,7 +61,7 @@ class YandexCloudWriter @AssistedInject constructor(
 
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.UnsuccessfulOperationException::class,
         CloudWriter.AlreadyExistsException::class
     )
     private fun createOneLevelDir(parentDirName: String, childDirName: String) {
@@ -70,7 +70,7 @@ class YandexCloudWriter @AssistedInject constructor(
 
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class,
+        CloudWriter.UnsuccessfulOperationException::class,
         CloudWriter.AlreadyExistsException::class
     )
     private fun createOneLevelDir(absoluteDirPath: String) {
@@ -98,7 +98,7 @@ class YandexCloudWriter @AssistedInject constructor(
 
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulResponseException::class
+        CloudWriter.UnsuccessfulOperationException::class
     )
     override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
 
@@ -110,7 +110,7 @@ class YandexCloudWriter @AssistedInject constructor(
     }
 
 
-    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    @Throws(IOException::class, CloudWriter.UnsuccessfulOperationException::class)
     override fun fileExists(parentDirName: String, childName: String): Boolean {
 
         val dirName = composePath(parentDirName, childName)
@@ -138,7 +138,7 @@ class YandexCloudWriter @AssistedInject constructor(
 
 
 
-    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    @Throws(IOException::class, CloudWriter.UnsuccessfulOperationException::class)
     private fun getURLForUpload(targetFilePath: String, overwriteIfExists: Boolean): String {
 
 
@@ -163,7 +163,7 @@ class YandexCloudWriter @AssistedInject constructor(
 
 
 
-    @Throws(IOException::class, CloudWriter.UnsuccessfulResponseException::class)
+    @Throws(IOException::class, CloudWriter.UnsuccessfulOperationException::class)
     private fun putFileReal(file: File, uploadURL: String) {
 
         val requestBody: RequestBody = file.asRequestBody(DEFAULT_MEDIA_TYPE.toMediaType())
@@ -180,7 +180,7 @@ class YandexCloudWriter @AssistedInject constructor(
 
 
     private fun unsuccessfulResponseException(response: Response): Throwable
-        = CloudWriter.UnsuccessfulResponseException(response.code, response.message)
+        = CloudWriter.UnsuccessfulOperationException(response.code, response.message)
 
     private fun alreadyExistsException(dirName: String): CloudWriter.AlreadyExistsException
             = CloudWriter.AlreadyExistsException(dirName)
