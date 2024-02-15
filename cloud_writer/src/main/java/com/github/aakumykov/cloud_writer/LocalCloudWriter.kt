@@ -13,7 +13,7 @@ class LocalCloudWriter @AssistedInject constructor(
 {
     @Throws(
         IOException::class,
-        CloudWriter.UnsuccessfulOperationException::class,
+        CloudWriter.OperationUnsuccessfulException::class,
         CloudWriter.AlreadyExistsException::class
     )
     override fun createDir(basePath: String, dirName: String) {
@@ -25,12 +25,12 @@ class LocalCloudWriter @AssistedInject constructor(
                 throw CloudWriter.AlreadyExistsException(dirName)
 
             if (!mkdirs())
-                throw CloudWriter.UnsuccessfulOperationException(0, dirNotCreatedMessage(basePath, dirName))
+                throw CloudWriter.OperationUnsuccessfulException(0, dirNotCreatedMessage(basePath, dirName))
         }
     }
 
 
-    @Throws(IOException::class, CloudWriter.UnsuccessfulOperationException::class)
+    @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
     override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
 
         val fullTargetPath = "${targetDirPath}/${file.name}".stripExtraSlashes()
@@ -47,8 +47,12 @@ class LocalCloudWriter @AssistedInject constructor(
         return File(parentDirName, childName).exists()
     }
 
-    @Throws(IOException::class, CloudWriter.UnsuccessfulOperationException::class)
-    override fun deleteFile(basePath: String, fileName: String) {
+    @Throws(
+        IOException::class,
+        CloudWriter.OperationUnsuccessfulException::class,
+        CloudWriter.OperationTimeoutException::class
+    )
+    override suspend fun deleteFile(basePath: String, fileName: String) {
 
         val path = CloudWriter.composeFullPath(basePath, fileName)
 

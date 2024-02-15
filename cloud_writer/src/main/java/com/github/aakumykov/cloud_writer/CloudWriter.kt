@@ -7,20 +7,20 @@ interface CloudWriter {
 
     @Throws(
         IOException::class,
-        UnsuccessfulOperationException::class,
+        OperationUnsuccessfulException::class,
         AlreadyExistsException::class
     )
     fun createDir(basePath: String, dirName: String)
 
 
     // TODO: AlreadyExistsException
-    @Throws(IOException::class, UnsuccessfulOperationException::class)
+    @Throws(IOException::class, OperationUnsuccessfulException::class)
     fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean = false)
 
 
     // TODO: не нужна
     // FIXME: добавить аннотацию в реализации
-    @Throws(IOException::class, UnsuccessfulOperationException::class)
+    @Throws(IOException::class, OperationUnsuccessfulException::class)
     fun fileExists(parentDirName: String, childName: String): Boolean
 
 
@@ -28,20 +28,24 @@ interface CloudWriter {
     /**
      * Удаляет файл/папку.
      */
-    @Throws(IOException::class, UnsuccessfulOperationException::class, IndeterminateOperationException::class)
-    fun deleteFile(basePath: String, fileName: String)
+    @Throws(
+        IOException::class,
+        OperationUnsuccessfulException::class,
+        OperationTimeoutException::class
+    )
+    suspend fun deleteFile(basePath: String, fileName: String)
 
 
     // TODO: выделить в отдельный файл...
     sealed class CloudWriterException(message: String) : Exception(message)
 
-    class UnsuccessfulOperationException(errorMsg: String) : CloudWriterException(errorMsg) {
+    class OperationUnsuccessfulException(errorMsg: String) : CloudWriterException(errorMsg) {
         constructor(responseCode:Int, responseMessage: String) : this("$responseCode: $responseMessage")
     }
 
-    class AlreadyExistsException(dirName: String) : CloudWriterException(dirName)
+    class OperationTimeoutException(errorMsg: String) : CloudWriterException(errorMsg)
 
-    class IndeterminateOperationException(operationStatusLink: String) : CloudWriterException(operationStatusLink)
+    class AlreadyExistsException(dirName: String) : CloudWriterException(dirName)
 
 
     companion object {
