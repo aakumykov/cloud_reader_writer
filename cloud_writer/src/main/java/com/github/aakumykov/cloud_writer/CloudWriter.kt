@@ -33,8 +33,7 @@ interface CloudWriter {
         OperationUnsuccessfulException::class,
         OperationTimeoutException::class
     )
-    suspend fun deleteFile(basePath: String, fileName: String)
-
+    fun deleteFile(basePath: String, fileName: String)
 
     // TODO: выделить в отдельный файл...
     sealed class CloudWriterException(message: String) : Exception(message)
