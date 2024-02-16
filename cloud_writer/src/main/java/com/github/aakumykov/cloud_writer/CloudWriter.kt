@@ -24,7 +24,7 @@ interface CloudWriter {
     fun fileExists(parentDirName: String, childName: String): Boolean
 
 
-    // TODO: удаление в корзину
+    // TODO: локальное удаление в корзину
     /**
      * Удаляет файл/папку.
      */
