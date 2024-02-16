@@ -101,6 +101,15 @@
 
         </LinearLayout>
 
+        <Button
+            android:id="@+id/deleteDirButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#F06292"
+            android:text="Удалить папку"
+            app:icon="@drawable/ic_folder_delete"
+            app:iconGravity="textStart" />
 
         <ProgressBar
             android:id="@+id/progressBar"

@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import com.github.aakumykov.cloud_reader_writer.databinding.ActivityMainBinding
 import com.github.aakumykov.cloud_reader_writer.extentions.getStringFromPreferences
 import com.github.aakumykov.cloud_reader_writer.extentions.storeStringInPreferences
@@ -22,6 +23,9 @@ import com.github.aakumykov.kotlin_playground.cloud_authenticator.YandexAuthenti
 import com.gitlab.aakumykov.exception_utils_module.ExceptionUtils
 import com.google.gson.Gson
 import com.yandex.authsdk.internal.strategy.LoginType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import permissions.dispatcher.ktx.PermissionsRequester
 import permissions.dispatcher.ktx.constructPermissionsRequest
@@ -74,6 +78,31 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         binding.selectFileButton.setOnClickListener { pickFile() }
         binding.uploadFileButton.setOnClickListener { uploadFile() }
         binding.checkUploadedFileButton.setOnClickListener { checkUploadedFile() }
+        binding.deleteDirButton.setOnClickListener { deleteDirectory() }
+    }
+
+    private fun deleteDirectory() {
+
+        val basePath = "/"
+        val fileName = "dir1"
+
+        lifecycleScope.launch {
+
+            hideError()
+            showProgressBar()
+
+            try {
+                withContext(Dispatchers.IO) {
+                    cloudWriter().deleteFile(basePath, fileName)
+                }
+            } catch (t: Throwable) {
+                showError(t)
+                Log.e(TAG, ExceptionUtils.getErrorMessage(t), t);
+            }
+            finally {
+                hideProgressBar()
+            }
+        }
     }
 
     private fun createDir() {
