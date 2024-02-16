@@ -29,12 +29,14 @@
             android:layout_height="wrap_content"
             android:text="@string/do_not_overwrite" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/yandexAuthButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="#ED5E32"
-            android:text="Авторизоваться в Яндекс" />
+            app:icon="@drawable/ic_logged_out"
+            app:iconGravity="textStart"
+            android:text="@string/login_to_yandex" />
 
         <EditText
             android:id="@+id/dirNameInput"
@@ -104,7 +106,7 @@
         <Button
             android:id="@+id/deleteDirButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:backgroundTint="#F06292"
             android:text="Удалить папку"

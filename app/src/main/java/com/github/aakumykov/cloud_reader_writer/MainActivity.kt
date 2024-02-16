@@ -58,11 +58,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
 
         yandexAuthenticator = YandexAuthenticator(this, LoginType.NATIVE, this)
         yandexAuthToken = getStringFromPreferences(YANDEX_AUTH_TOKEN)
-
-        binding.yandexAuthButton.setOnClickListener {
-            hideError()
-            yandexAuthenticator.startAuth()
-        }
+        displayYandexAuthStatus()
 
         binding.dirNameInput.addTextChangedListener { saveDirNameInput() }
         
@@ -73,6 +69,17 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         binding.overwriteSwitch.setOnCheckedChangeListener { _, isChecked ->
             binding.overwriteSwitch.setText(if(isChecked) R.string.overwrite else R.string.do_not_overwrite)
         }
+
+        binding.yandexAuthButton.setOnClickListener {
+            if (null == yandexAuthToken)
+                yandexAuthenticator.startAuth()
+            else {
+                yandexAuthToken = null
+                storeStringInPreferences(YANDEX_AUTH_TOKEN, null)
+                displayYandexAuthStatus()
+            }
+        }
+
         binding.createDirButton.setOnClickListener { createDir() }
         binding.checkDirExistsButton.setOnClickListener { checkDirExists(toggled()) }
         binding.selectFileButton.setOnClickListener { pickFile() }
@@ -88,6 +95,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
 
         lifecycleScope.launch {
 
+            hideInfo()
             hideError()
             showProgressBar()
 
@@ -95,7 +103,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
                 withContext(Dispatchers.IO) {
                     cloudWriter().deleteFile(basePath, fileName)
                 }
-            } catch (t: Throwable) {
+                showInfo("Папка '$fileName' удалена.")
+            }
+            catch (t: Throwable) {
                 showError(t)
                 Log.e(TAG, ExceptionUtils.getErrorMessage(t), t);
             }
@@ -180,8 +190,14 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     private fun isOverwrite(): Boolean = binding.overwriteSwitch.isChecked
 
     private fun cloudWriter(): CloudWriter =
-        if (binding.cloudTypeToggleButton.isChecked) yandexCloudWriter()
-        else localCloudWriter()
+        if (binding.cloudTypeToggleButton.isChecked) {
+            Log.d(TAG, "cloudWriter: YANDEX")
+            yandexCloudWriter()
+        }
+        else {
+            Log.d(TAG, "cloudWriter: LOCAL")
+            localCloudWriter()
+        }
 
     private fun checkDirExists(isCloud: Boolean) {
         val cloudWriter = if (isCloud) yandexCloudWriter() else localCloudWriter()
@@ -278,6 +294,21 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     override fun onCloudAuthSuccess(authToken: String) {
         yandexAuthToken = authToken
         storeStringInPreferences(YANDEX_AUTH_TOKEN, authToken)
+        displayYandexAuthStatus()
+    }
+
+    private fun displayYandexAuthStatus() {
+        if (null == yandexAuthToken) {
+            with(binding.yandexAuthButton){
+                setText(com.github.aakumykov.cloud_reader_writer.R.string.login_to_yandex)
+                setIconResource(R.drawable.ic_logged_out)
+            }
+        } else {
+            with(binding.yandexAuthButton){
+                setText(com.github.aakumykov.cloud_reader_writer.R.string.logout_from_yandex)
+                setIconResource(R.drawable.ic_logged_in)
+            }
+        }
     }
 
     override fun onCloudAuthFailed(throwable: Throwable) {
