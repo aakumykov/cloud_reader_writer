@@ -148,13 +148,13 @@ class YandexCloudWriter @AssistedInject constructor(
             deleteFileSimple(basePath, fileName)
         }
         catch (e: IndeterminateOperationException) {
-            while(operationIsFinished(e.operationStatusLink)) {
+            while(!operationIsFinished(e.operationStatusLink)) {
 
-                delay(OPERATION_WAITING_STEP)
+                delay(OPERATION_WAITING_STEP_MILLIS)
 
-                timeElapsed += OPERATION_WAITING_STEP
+                timeElapsed += OPERATION_WAITING_STEP_MILLIS
 
-                if (timeElapsed > OPERATION_WAITING_TIMEOUT)
+                if (timeElapsed > OPERATION_WAITING_TIMEOUT_MILLIS)
                     throw CloudWriter.OperationTimeoutException("Deletion of file '${CloudWriter.composeFullPath(basePath, fileName)}' is timed out. Maybe it is really deleted.")
             }
         }
@@ -162,7 +162,11 @@ class YandexCloudWriter @AssistedInject constructor(
 
     @Throws(CloudWriter.OperationUnsuccessfulException::class)
     private fun operationIsFinished(operationStatusLink: String): Boolean {
-        val request = Request.Builder().url(operationStatusLink).get().build()
+        val request = Request.Builder()
+            .url(operationStatusLink)
+            .header("Authorization", authToken)
+            .get()
+            .build()
         return okHttpClient.newCall(request).execute().use { response ->
             when(response.code) {
                 200 -> statusResponseToBoolean(response)
@@ -255,12 +259,11 @@ class YandexCloudWriter @AssistedInject constructor(
     companion object {
         val TAG: String = YandexCloudWriter::class.java.simpleName
 
-        const val OPERATION_WAITING_STEP = 1000L // 1000 миллисекунд
-        const val OPERATION_WAITING_TIMEOUT = 30_000L // 30 секунд
+        const val OPERATION_WAITING_STEP_MILLIS = 100L
+        const val OPERATION_WAITING_TIMEOUT_MILLIS = 30_000L
 
         private const val DISK_BASE_URL = "https://cloud-api.yandex.net/v1/disk"
         private const val RESOURCES_BASE_URL = "${DISK_BASE_URL}/resources"
-        private const val OPERATIONS_BASE_URL = "${DISK_BASE_URL}/operations/"
         private const val UPLOAD_BASE_URL = "$RESOURCES_BASE_URL/upload"
 
         private const val DEFAULT_MEDIA_TYPE = "application/octet-stream"
