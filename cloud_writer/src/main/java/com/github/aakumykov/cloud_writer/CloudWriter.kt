@@ -25,9 +25,6 @@ interface CloudWriter {
 
 
     // TODO: локальное удаление в корзину
-    /**
-     * Удаляет файл/папку.
-     */
     @Throws(
         IOException::class,
         OperationUnsuccessfulException::class,
@@ -35,7 +32,16 @@ interface CloudWriter {
     )
     fun deleteFile(basePath: String, fileName: String)
 
-    // TODO: выделить в отдельный файл...
+    @Throws(
+        IOException::class,
+        OperationUnsuccessfulException::class,
+        OperationTimeoutException::class
+    )
+    fun restoreFile(fileName: String)
+
+
+    // TODO: выделить классы исключений в отдельный файл.
+    // TODO: избавиться от них...
     sealed class CloudWriterException(message: String) : Exception(message)
 
     class OperationUnsuccessfulException(errorMsg: String) : CloudWriterException(errorMsg) {

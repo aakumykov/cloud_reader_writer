@@ -11,8 +11,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okhttp3.internal.EMPTY_REQUEST
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -80,12 +80,10 @@ class YandexCloudWriter @AssistedInject constructor(
             addQueryParameter("path", absoluteDirPath)
         }.build()
 
-        val requestBody = "".toRequestBody(null)
-
         val request: Request = Request.Builder()
             .header("Authorization", authToken)
             .url(url)
-            .put(requestBody)
+            .put(EMPTY_REQUEST)
             .build()
 
         okHttpClient.newCall(request).execute().use { response ->
@@ -160,6 +158,83 @@ class YandexCloudWriter @AssistedInject constructor(
         }
     }
 
+
+    @Throws(IndeterminateOperationException::class)
+    private fun deleteFileSimple(basePath: String, fileName: String) {
+
+        val filePath = CloudWriter.composeFullPath(basePath, fileName)
+
+        val url = RESOURCES_BASE_URL.toHttpUrl().newBuilder().apply {
+            addQueryParameter("path", filePath)
+        }.build()
+
+        val request: Request = Request.Builder()
+            .header("Authorization", authToken)
+            .url(url)
+            .delete()
+            .build()
+
+        okHttpClient.newCall(request).execute().use { response ->
+            when (response.code) {
+                204 -> return
+                202 -> throw IndeterminateOperationException(linkFromResponse(response))
+                else -> throw unsuccessfulResponseException(response)
+            }
+        }
+    }
+
+
+    @Throws(
+        IOException::class,
+        CloudWriter.OperationUnsuccessfulException::class,
+        CloudWriter.OperationTimeoutException::class
+    )
+    override fun restoreFile(fileName: String) {
+
+        var timeElapsed = 0L
+
+        try {
+            restoreFileSimple(fileName)
+        }
+        catch (e: IndeterminateOperationException) {
+            while(!operationIsFinished(e.operationStatusLink)) {
+
+                TimeUnit.MILLISECONDS.sleep(OPERATION_WAITING_STEP_MILLIS)
+
+                timeElapsed += OPERATION_WAITING_STEP_MILLIS
+
+                if (timeElapsed > OPERATION_WAITING_TIMEOUT_MILLIS)
+                    throw CloudWriter.OperationTimeoutException("Restoration of file '$fileName' is timed out. Maybe it is really restored.")
+            }
+        }
+    }
+
+
+    @Throws(IndeterminateOperationException::class)
+    private fun restoreFileSimple(fileName: String) {
+
+        val filePath = fileName
+
+        val url = RESTORE_FROM_TRASH_URL.toHttpUrl().newBuilder().apply {
+            addQueryParameter("path", filePath)
+        }.build()
+
+        val request: Request = Request.Builder()
+            .header("Authorization", authToken)
+            .url(url)
+            .put(EMPTY_REQUEST)
+            .build()
+
+        okHttpClient.newCall(request).execute().use { response ->
+            when (response.code) {
+                204 -> return
+                202 -> throw IndeterminateOperationException(linkFromResponse(response))
+                else -> throw unsuccessfulResponseException(response)
+            }
+        }
+    }
+
+
     @Throws(CloudWriter.OperationUnsuccessfulException::class)
     private fun operationIsFinished(operationStatusLink: String): Boolean {
         val request = Request.Builder()
@@ -178,28 +253,6 @@ class YandexCloudWriter @AssistedInject constructor(
     private fun statusResponseToBoolean(response: Response): Boolean {
         val operationStatus = gson.fromJson(response.body?.string(), OperationStatus::class.java)
         return "success" == operationStatus.status
-    }
-
-    @Throws(IndeterminateOperationException::class)
-    private fun deleteFileSimple(basePath: String, fileName: String) {
-
-        val url = RESOURCES_BASE_URL.toHttpUrl().newBuilder().apply {
-            addQueryParameter("path", fileName)
-        }.build()
-
-        val request: Request = Request.Builder()
-            .header("Authorization", authToken)
-            .url(url)
-            .delete()
-            .build()
-
-        okHttpClient.newCall(request).execute().use { response ->
-            when (response.code) {
-                204 -> return
-                202 -> throw IndeterminateOperationException(linkFromResponse(response))
-                else -> throw unsuccessfulResponseException(response)
-            }
-        }
     }
 
 
@@ -250,7 +303,6 @@ class YandexCloudWriter @AssistedInject constructor(
             = CloudWriter.AlreadyExistsException(dirName)
 
 
-
     private fun linkFromResponse(response: Response): String {
         return gson.fromJson(response.body?.string(), Link::class.java).href
     }
@@ -265,6 +317,8 @@ class YandexCloudWriter @AssistedInject constructor(
         private const val DISK_BASE_URL = "https://cloud-api.yandex.net/v1/disk"
         private const val RESOURCES_BASE_URL = "${DISK_BASE_URL}/resources"
         private const val UPLOAD_BASE_URL = "$RESOURCES_BASE_URL/upload"
+
+        private const val RESTORE_FROM_TRASH_URL = "${DISK_BASE_URL}/trash/resources/restore"
 
         private const val DEFAULT_MEDIA_TYPE = "application/octet-stream"
     }

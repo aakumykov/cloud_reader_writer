@@ -65,6 +65,15 @@ class LocalCloudWriter @AssistedInject constructor(
         }
     }
 
+    @Throws(
+        IOException::class,
+        CloudWriter.OperationUnsuccessfulException::class,
+        CloudWriter.OperationTimeoutException::class
+    )
+    override fun restoreFile(fileName: String) {
+        throw CloudWriter.OperationUnsuccessfulException("Не поддерживается этим классом.")
+    }
+
 
     private fun dirNotCreatedMessage(parentDirName: String, childDirName: String): String
             = "Directory '${parentDirName}${CloudWriter.DS}${childDirName}' not created."
