@@ -52,7 +52,7 @@ class LocalCloudWriter @AssistedInject constructor(
         CloudWriter.OperationUnsuccessfulException::class,
         CloudWriter.OperationTimeoutException::class
     )
-    override suspend fun deleteFile(basePath: String, fileName: String) {
+    override fun deleteFile(basePath: String, fileName: String) {
 
         val path = CloudWriter.composeFullPath(basePath, fileName)
 

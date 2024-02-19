@@ -5,7 +5,6 @@ import com.google.gson.Gson
 import com.yandex.disk.rest.json.Link
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.delay
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -16,6 +15,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class YandexCloudWriter @AssistedInject constructor(
     private val okHttpClient: OkHttpClient,
@@ -140,7 +140,7 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.OperationUnsuccessfulException::class,
         CloudWriter.OperationTimeoutException::class
     )
-    override suspend fun deleteFile(basePath: String, fileName: String) {
+    override fun deleteFile(basePath: String, fileName: String) {
 
         var timeElapsed = 0L
 
@@ -150,7 +150,7 @@ class YandexCloudWriter @AssistedInject constructor(
         catch (e: IndeterminateOperationException) {
             while(!operationIsFinished(e.operationStatusLink)) {
 
-                delay(OPERATION_WAITING_STEP_MILLIS)
+                TimeUnit.MILLISECONDS.sleep(OPERATION_WAITING_STEP_MILLIS)
 
                 timeElapsed += OPERATION_WAITING_STEP_MILLIS
 
