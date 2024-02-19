@@ -59,8 +59,6 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         yandexAuthenticator = YandexAuthenticator(this, LoginType.NATIVE, this)
         yandexAuthToken = getStringFromPreferences(YANDEX_AUTH_TOKEN)
         displayYandexAuthStatus()
-
-        binding.dirNameInput.addTextChangedListener { saveDirNameInput() }
         
         prepareButtons()
     }
@@ -80,18 +78,19 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             }
         }
 
+        binding.dirNameInput.setOnClickListener { it.isEnabled = !it.isEnabled }
+        binding.dirNameInput.addTextChangedListener { saveDirNameInput() }
+
         binding.createDirButton.setOnClickListener { createDir() }
         binding.checkDirExistsButton.setOnClickListener { checkDirExists(toggled()) }
         binding.selectFileButton.setOnClickListener { pickFile() }
         binding.uploadFileButton.setOnClickListener { uploadFile() }
         binding.checkUploadedFileButton.setOnClickListener { checkUploadedFile() }
         binding.deleteDirButton.setOnClickListener { deleteDirectory() }
+        binding.restoreDirButton.setOnClickListener { restoreDirectory() }
     }
 
     private fun deleteDirectory() {
-
-        val basePath = "/"
-        val fileName = "dir1"
 
         lifecycleScope.launch {
 
@@ -101,9 +100,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
 
             try {
                 withContext(Dispatchers.IO) {
-                    cloudWriter().deleteFile(basePath, fileName)
+                    cloudWriter().deleteFile(PROBE_DIR_BASE_PATH, PROBE_DIR_NAME)
                 }
-                showInfo("Папка '$fileName' удалена.")
+                showInfo("Папка '$PROBE_DIR_NAME' удалена.")
             }
             catch (t: Throwable) {
                 showError(t)
@@ -114,6 +113,32 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             }
         }
     }
+
+    private fun restoreDirectory() {
+
+        lifecycleScope.launch {
+
+            hideInfo()
+            hideError()
+            showProgressBar()
+
+            try {
+                withContext(Dispatchers.IO) {
+                    cloudWriter().restoreFile(PROBE_DIR_NAME)
+                }
+                showInfo("Папка '$PROBE_DIR_NAME' восстановлена.")
+            }
+            catch (t: Throwable) {
+                showError(t)
+                Log.e(TAG, ExceptionUtils.getErrorMessage(t), t);
+            }
+            finally {
+                hideProgressBar()
+            }
+        }
+
+    }
+
 
     private fun createDir() {
         if (toggled())
@@ -374,6 +399,9 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         const val DIR_NAME = "DIR_NAME"
         const val SELECTED_FILE = "SELECTED_FILE"
         const val CANONICAL_ROOT_PATH = "/"
+
+        const val PROBE_DIR_BASE_PATH = "/"
+        const val PROBE_DIR_NAME = "dir1"
     }
 
     override fun onFilesSelected(selectedItemsList: List<FSItem>) {

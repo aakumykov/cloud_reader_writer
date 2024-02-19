@@ -6,28 +6,37 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         tools:context=".MainActivity">
 
-        <ToggleButton
-            android:id="@+id/cloudTypeToggleButton"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="ToggleButton"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textOff="Локальное &quot;облако&quot;"
-            android:textOn="Яндекс.Диск" />
+            android:orientation="horizontal">
 
+            <ToggleButton
+                android:id="@+id/cloudTypeToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="true"
+                android:text="ToggleButton"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textOff="Локальное &quot;облако&quot;"
+                android:textOn="Яндекс.Диск" />
 
-        <Switch
-            android:id="@+id/overwriteSwitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/do_not_overwrite" />
+            <Switch
+                android:id="@+id/overwriteSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAlignment="textEnd"
+                android:text="@string/do_not_overwrite"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/yandexAuthButton"
@@ -43,6 +52,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
+            android:enabled="false"
             android:hint="Имя папки"
             android:inputType="text" />
 
@@ -110,7 +120,17 @@
             android:layout_weight="1"
             android:backgroundTint="#F06292"
             android:text="Удалить папку"
-            app:icon="@drawable/ic_folder_delete"
+            app:icon="@drawable/ic_delete"
+            app:iconGravity="textEnd" />
+
+        <Button
+            android:id="@+id/restoreDirButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:backgroundTint="#4FC3F7"
+            android:text="Восстановить папку"
+            app:icon="@drawable/ic_restore"
             app:iconGravity="textStart" />
 
         <ProgressBar
