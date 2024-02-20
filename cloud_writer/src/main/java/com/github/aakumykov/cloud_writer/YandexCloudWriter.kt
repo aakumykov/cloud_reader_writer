@@ -30,6 +30,7 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.AlreadyExistsException::class
     )
     override fun createDir(basePath: String, dirName: String) {
+        Log.d(TAG, "createDir() called with: basePath = $basePath, dirName = $dirName")
         if (!dirName.contains(CloudWriter.DS)) createOneLevelDir(CloudWriter.composeFullPath(basePath, dirName))
         else createMultiLevelDir(basePath, dirName)
     }
@@ -41,6 +42,8 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.AlreadyExistsException::class
     )
     private fun createMultiLevelDir(parentDirName: String, childDirName: String) {
+
+        Log.d(TAG, "createMultiLevelDir() called with: parentDirName = $parentDirName, childDirName = $childDirName")
 
         if (fileExists(parentDirName, childDirName))
             throw CloudWriter.AlreadyExistsException(childDirName)
@@ -66,6 +69,7 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.AlreadyExistsException::class
     )
     private fun createOneLevelDir(parentDirName: String, childDirName: String) {
+        Log.d(TAG, "createOneLevelDir() called with: parentDirName = $parentDirName, childDirName = $childDirName")
         createOneLevelDir(CloudWriter.composeFullPath(parentDirName, childDirName))
     }
 
@@ -75,6 +79,8 @@ class YandexCloudWriter @AssistedInject constructor(
         CloudWriter.AlreadyExistsException::class
     )
     private fun createOneLevelDir(absoluteDirPath: String) {
+
+        Log.d(TAG, "createOneLevelDir() called with: absoluteDirPath = $absoluteDirPath")
 
         val url = RESOURCES_BASE_URL.toHttpUrl().newBuilder().apply {
             addQueryParameter("path", absoluteDirPath)
@@ -103,6 +109,8 @@ class YandexCloudWriter @AssistedInject constructor(
     )
     override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
 
+        Log.d(TAG, "putFile() called with: file = $file, targetDirPath = $targetDirPath, overwriteIfExists = $overwriteIfExists")
+
         val fullTargetPath = CloudWriter.composeFullPath(targetDirPath, file.name)
 
         val uploadURL = getURLForUpload(fullTargetPath, overwriteIfExists)
@@ -114,7 +122,14 @@ class YandexCloudWriter @AssistedInject constructor(
     @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
     override fun fileExists(parentDirName: String, childName: String): Boolean {
 
+        Log.d(
+            TAG,
+            "fileExists() called with: parentDirName = $parentDirName, childName = $childName"
+        )
+
         val dirName = CloudWriter.composeFullPath(parentDirName, childName)
+
+        Log.d(TAG, "dirName: $dirName")
 
         val url = RESOURCES_BASE_URL.toHttpUrl().newBuilder().apply {
             addQueryParameter("path", dirName)
@@ -142,13 +157,19 @@ class YandexCloudWriter @AssistedInject constructor(
     )
     override fun deleteFile(basePath: String, fileName: String) {
 
+        Log.d(TAG, "deleteFile() called with: basePath = $basePath, fileName = $fileName")
+
         var timeElapsed = 0L
 
         try {
             deleteFileSimple(basePath, fileName)
         }
         catch (e: IndeterminateOperationException) {
+            Log.d(TAG, "Длительная операция удаления (${hashCode()}) ...")
+
             while(!operationIsFinished(e.operationStatusLink)) {
+
+                Log.d(TAG, "... операция удаления продолжается (${hashCode()}) ...")
 
                 TimeUnit.MILLISECONDS.sleep(OPERATION_WAITING_STEP_MILLIS)
 
@@ -157,11 +178,14 @@ class YandexCloudWriter @AssistedInject constructor(
                 if (timeElapsed > OPERATION_WAITING_TIMEOUT_MILLIS)
                     throw CloudWriter.OperationTimeoutException("Deletion of file '${CloudWriter.composeFullPath(basePath, fileName)}' is timed out. Maybe it is really deleted.")
             }
+
+            Log.d(TAG, "... операция удаления завершена (${hashCode()}).")
         }
     }
 
     @Throws(CloudWriter.OperationUnsuccessfulException::class)
     private fun operationIsFinished(operationStatusLink: String): Boolean {
+        Log.d(TAG, "operationIsFinished() called with: operationStatusLink = $operationStatusLink")
         val request = Request.Builder()
             .url(operationStatusLink)
             .header("Authorization", authToken)
@@ -182,6 +206,8 @@ class YandexCloudWriter @AssistedInject constructor(
 
     @Throws(IndeterminateOperationException::class)
     private fun deleteFileSimple(basePath: String, fileName: String) {
+
+        Log.d(TAG, "deleteFileSimple() called with: basePath = $basePath, fileName = $fileName")
 
         val url = RESOURCES_BASE_URL.toHttpUrl().newBuilder().apply {
             addQueryParameter("path", fileName)
@@ -206,6 +232,10 @@ class YandexCloudWriter @AssistedInject constructor(
     @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
     private fun getURLForUpload(targetFilePath: String, overwriteIfExists: Boolean): String {
 
+        Log.d(
+            TAG,
+            "getURLForUpload() called with: targetFilePath = $targetFilePath, overwriteIfExists = $overwriteIfExists"
+        )
 
         val url = UPLOAD_BASE_URL.toHttpUrl().newBuilder()
             .apply {
@@ -229,6 +259,8 @@ class YandexCloudWriter @AssistedInject constructor(
 
     @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
     private fun putFileReal(file: File, uploadURL: String) {
+
+        Log.d(TAG, "putFileReal() called with: file = $file, uploadURL = $uploadURL")
 
         val requestBody: RequestBody = file.asRequestBody(DEFAULT_MEDIA_TYPE.toMediaType())
 
