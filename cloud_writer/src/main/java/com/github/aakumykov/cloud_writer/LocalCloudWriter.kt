@@ -31,15 +31,14 @@ class LocalCloudWriter @AssistedInject constructor(
 
 
     @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
-    override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
+    override fun putFile(file: File, targetPath: String, overwriteIfExists: Boolean) {
 
-        val fullTargetPath = "${targetDirPath}/${file.name}".stripExtraSlashes()
-        val targetFile = File(fullTargetPath)
+        val targetFile = File(targetPath)
 
         val isMoved = file.renameTo(targetFile)
 
         if (!isMoved)
-            throw IOException("File cannot be not moved from '${file.absolutePath}' to '${fullTargetPath}'")
+            throw IOException("File cannot be not moved from '${file.absolutePath}' to '${targetPath}'")
     }
 
     

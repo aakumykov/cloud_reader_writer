@@ -14,8 +14,12 @@ interface CloudWriter {
 
 
     // TODO: AlreadyExistsException
+    /**
+     * Отправляет файл по указанному пути.
+     * Реализации обязаны использовать параметр targetPath "как есть", не внося в него корректировки!
+     */
     @Throws(IOException::class, OperationUnsuccessfulException::class)
-    fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean = false)
+    fun putFile(file: File, targetPath: String, overwriteIfExists: Boolean = false)
 
 
     // TODO: не нужна

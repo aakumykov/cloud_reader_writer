@@ -107,13 +107,11 @@ class YandexCloudWriter @AssistedInject constructor(
         IOException::class,
         CloudWriter.OperationUnsuccessfulException::class
     )
-    override fun putFile(file: File, targetDirPath: String, overwriteIfExists: Boolean) {
+    override fun putFile(file: File, targetPath: String, overwriteIfExists: Boolean) {
 
-        Log.d(TAG, "putFile() called with: file = $file, targetDirPath = $targetDirPath, overwriteIfExists = $overwriteIfExists")
+        Log.d(TAG, "putFile() called with: file = $file, targetDirPath = $targetPath, overwriteIfExists = $overwriteIfExists")
 
-        val fullTargetPath = CloudWriter.composeFullPath(targetDirPath, file.name)
-
-        val uploadURL = getURLForUpload(fullTargetPath, overwriteIfExists)
+        val uploadURL = getURLForUpload(targetPath, overwriteIfExists)
 
         putFileReal(file, uploadURL)
     }
