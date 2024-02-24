@@ -207,8 +207,10 @@ class YandexCloudWriter @AssistedInject constructor(
 
         Log.d(TAG, "deleteFileSimple() called with: basePath = $basePath, fileName = $fileName")
 
+        val path = CloudWriter.composeFullPath(basePath, fileName)
+
         val url = RESOURCES_BASE_URL.toHttpUrl().newBuilder().apply {
-            addQueryParameter("path", fileName)
+            addQueryParameter("path", path)
         }.build()
 
         val request: Request = Request.Builder()
