@@ -9,7 +9,6 @@ import okhttp3.Response
 import java.io.InputStream
 
 class YandexCloudReader(
-    private val userName: String,
     private val authToken: String,
     private val okHttpClient: OkHttpClient,
     private val gson: Gson
