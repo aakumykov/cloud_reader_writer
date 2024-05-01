@@ -27,7 +27,7 @@ class LocalCloudWriter @AssistedInject constructor(
                 throw CloudWriter.AlreadyExistsException(dirName)
 
             if (!mkdirs())
-                throw CloudWriter.OperationUnsuccessfulException(0, dirNotCreatedMessage(basePath, dirName))
+                throw CloudWriter.OperationUnsuccessfulException(0, dirNotCreatedMessage(absolutePath))
         }
     }
 
@@ -80,6 +80,6 @@ class LocalCloudWriter @AssistedInject constructor(
     }
 
 
-    private fun dirNotCreatedMessage(parentDirName: String, childDirName: String): String
-            = "Directory '${parentDirName}${CloudWriter.DS}${childDirName}' not created."
+    private fun dirNotCreatedMessage(dirName: String): String
+            = "Directory '${dirName}' not created."
 }
