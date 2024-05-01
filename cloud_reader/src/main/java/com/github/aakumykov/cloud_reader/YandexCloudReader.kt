@@ -27,7 +27,7 @@ class YandexCloudReader(
             .build()
 
         return try {
-            okHttpClient.newCall(request).execute().use { response ->
+            okHttpClient.newCall(request).execute().let { response ->
                 if (response.isSuccessful)
                     response.body?.byteStream()?.let { Result.success(it) }
                         ?: Result.failure(Exception("Empty response body"))
