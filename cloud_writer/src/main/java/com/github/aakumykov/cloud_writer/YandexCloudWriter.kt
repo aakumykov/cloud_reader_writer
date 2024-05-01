@@ -15,6 +15,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
 class YandexCloudWriter @AssistedInject constructor(
@@ -281,6 +282,9 @@ class YandexCloudWriter @AssistedInject constructor(
     private fun alreadyExistsException(dirName: String): CloudWriter.AlreadyExistsException
             = CloudWriter.AlreadyExistsException(dirName)
 
+    override fun putFile(inputStream: InputStream, targetPath: String, overwriteIfExists: Boolean) {
+        TODO("Not yet implemented")
+    }
 
 
     private fun linkFromResponse(response: Response): String {

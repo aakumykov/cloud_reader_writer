@@ -8,8 +8,15 @@ plugins {
 project.ext {
     artifactId = 'cloud_writer'
     groupId = 'com.github.aakumykov'
-    versionCode = 7
-    versionName = "0.0." + versionCode
+
+    majorVersionCode = 0
+    minorVersionCode = 0
+    patchVersionCode = 8
+    suffix = "alpha"
+
+    versionCode = 8
+
+    versionName = majorVersionCode + "." + minorVersionCode + "." + patchVersionCode + "-" + suffix
 }
 
 android {

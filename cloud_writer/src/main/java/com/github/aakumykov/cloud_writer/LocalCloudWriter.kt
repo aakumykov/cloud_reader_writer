@@ -1,11 +1,13 @@
 package com.github.aakumykov.cloud_writer
 
 import com.github.aakumykov.cloud_writer.CloudWriter.Companion.ARG_NAME_AUTH_TOKEN
+import com.github.aakumykov.cloud_writer.extensions.copyTo
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
 
 class LocalCloudWriter @AssistedInject constructor(
     @Assisted(ARG_NAME_AUTH_TOKEN) private val authToken: String
@@ -41,7 +43,20 @@ class LocalCloudWriter @AssistedInject constructor(
             throw IOException("File cannot be not moved from '${file.absolutePath}' to '${targetPath}'")
     }
 
-    
+
+    @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
+    override fun putFile(inputStream: InputStream, targetPath: String, overwriteIfExists: Boolean) {
+
+        val targetFile = File(targetPath)
+        if (targetFile.exists() && !overwriteIfExists)
+            return
+
+        File(targetPath).outputStream().use { os ->
+            inputStream.copyTo(os)
+        }
+    }
+
+
     override fun fileExists(parentDirName: String, childName: String): Boolean {
         return File(parentDirName, childName).exists()
     }

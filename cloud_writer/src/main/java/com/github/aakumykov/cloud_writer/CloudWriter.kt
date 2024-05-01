@@ -2,6 +2,7 @@ package com.github.aakumykov.cloud_writer
 
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 
 interface CloudWriter {
 
@@ -20,6 +21,10 @@ interface CloudWriter {
      */
     @Throws(IOException::class, OperationUnsuccessfulException::class)
     fun putFile(file: File, targetPath: String, overwriteIfExists: Boolean = false)
+
+
+    @Throws(IOException::class, OperationUnsuccessfulException::class)
+    fun putFile(inputStream: InputStream, targetPath: String, overwriteIfExists: Boolean = false)
 
 
     // TODO: не нужна
