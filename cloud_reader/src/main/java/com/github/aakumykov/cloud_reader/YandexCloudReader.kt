@@ -17,20 +17,19 @@ class YandexCloudReader(
 ) : CloudReader {
 
 
-    override suspend fun getDownloadLink(absolutePath: String): Result<String?> {
+    override suspend fun getDownloadLink(absolutePath: String): Result<String> {
         return try {
             Result.success(getDownloadLinkDirect(absolutePath))
         } catch (e: IOException) {
             Result.failure(e)
+        } catch (e: IllegalArgumentException) {
+            Result.failure(e)
         }
     }
 
-    override suspend fun getFileInputStream(absolutePath: String): Result<InputStream?> {
+    override suspend fun getFileInputStream(absolutePath: String): Result<InputStream> {
         return try {
             getDownloadLinkDirect(absolutePath).let { url ->
-
-                if (null == url)
-                    throw Exception("url is null")
 
                 Request.Builder()
                     .url(url)
@@ -38,7 +37,7 @@ class YandexCloudReader(
                     .let {  request ->
                         okHttpClient.newCall(request).execute().let { response ->
                             when (response.code) {
-                                200 -> Result.success(response.body?.byteStream())
+                                200 -> Result.success(streamFromResponse(response))
                                 else -> throw exceptionFromErrorResponse(response)
                             }
                         }
@@ -46,12 +45,14 @@ class YandexCloudReader(
             }
         } catch (e: IOException) {
             Result.failure(e)
+        } catch (e: IllegalArgumentException) {
+            Result.failure(e)
         }
     }
 
 
-    @Throws(IOException::class)
-    private fun getDownloadLinkDirect(absolutePath: String): String? {
+    @Throws(IOException::class, IllegalArgumentException::class)
+    private fun getDownloadLinkDirect(absolutePath: String): String {
 
         val url = DOWNLOAD_BASE_URL.toHttpUrl().newBuilder()
             .apply {
@@ -71,9 +72,20 @@ class YandexCloudReader(
         }
     }
 
-    private fun urlFromResponse(response: Response): String? {
-        return gson.fromJson(response.body?.string(), Link::class.java).href
+
+    @Throws(IllegalArgumentException::class)
+    private fun urlFromResponse(response: Response): String {
+        return response.body?.let {
+            return gson.fromJson(it.string(), Link::class.java).href
+        } ?: throw nullResponseBodyException()
     }
+
+
+    @Throws(IllegalArgumentException::class)
+    private fun streamFromResponse(response: Response): InputStream {
+        return response.body?.byteStream() ?: throw nullResponseBodyException()
+    }
+
 
     private fun exceptionFromErrorResponse(response: Response): Exception {
         return Exception(
@@ -83,10 +95,9 @@ class YandexCloudReader(
         )
     }
 
-    // TODO: в общий модуль
-    private fun linkFromResponse(response: Response): String {
-        return gson.fromJson(response.body?.string(), Link::class.java).href
-    }
+
+    private fun nullResponseBodyException() = IllegalArgumentException("Null response body.")
+
 
     companion object {
         private const val DISK_BASE_URL = "https://cloud-api.yandex.net/v1/disk"
