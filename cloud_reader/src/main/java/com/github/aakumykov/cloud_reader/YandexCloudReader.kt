@@ -1,11 +1,13 @@
 package com.github.aakumykov.cloud_reader
 
 import com.google.gson.Gson
+import com.yandex.disk.rest.json.ApiError
 import com.yandex.disk.rest.json.Link
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import java.io.IOException
 import java.io.InputStream
 
 class YandexCloudReader(
@@ -14,7 +16,42 @@ class YandexCloudReader(
     private val gson: Gson
 ) : CloudReader {
 
-    override suspend fun getFileInputStream(absolutePath: String): Result<InputStream> {
+
+    override suspend fun getDownloadLink(absolutePath: String): Result<String?> {
+        return try {
+            Result.success(getDownloadLinkDirect(absolutePath))
+        } catch (e: IOException) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getFileInputStream(absolutePath: String): Result<InputStream?> {
+        return try {
+            getDownloadLinkDirect(absolutePath).let { url ->
+
+                if (null == url)
+                    throw Exception("url is null")
+
+                Request.Builder()
+                    .url(url)
+                    .build()
+                    .let {  request ->
+                        okHttpClient.newCall(request).execute().let { response ->
+                            when (response.code) {
+                                200 -> Result.success(response.body?.byteStream())
+                                else -> throw exceptionFromErrorResponse(response)
+                            }
+                        }
+                    }
+            }
+        } catch (e: IOException) {
+            Result.failure(e)
+        }
+    }
+
+
+    @Throws(IOException::class)
+    private fun getDownloadLinkDirect(absolutePath: String): String? {
 
         val url = DOWNLOAD_BASE_URL.toHttpUrl().newBuilder()
             .apply {
@@ -26,17 +63,24 @@ class YandexCloudReader(
             .header("Authorization", authToken)
             .build()
 
-        return try {
-            okHttpClient.newCall(request).execute().let { response ->
-                if (response.isSuccessful)
-                    response.body?.byteStream()?.let { Result.success(it) }
-                        ?: Result.failure(Exception("Empty response body"))
-                else
-                    Result.failure(Exception())
+        return okHttpClient.newCall(request).execute().use { response ->
+            when(response.code) {
+                200 -> urlFromResponse(response)
+                else -> throw exceptionFromErrorResponse(response)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
+    }
+
+    private fun urlFromResponse(response: Response): String? {
+        return gson.fromJson(response.body?.string(), Link::class.java).href
+    }
+
+    private fun exceptionFromErrorResponse(response: Response): Exception {
+        return Exception(
+            gson.fromJson(response.body?.string(), ApiError::class.java).let {
+                "${response.code}: ${it.error}: ${it.description}"
+            }
+        )
     }
 
     // TODO: в общий модуль

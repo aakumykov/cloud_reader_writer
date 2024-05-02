@@ -9,6 +9,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import com.github.aakumykov.cloud_reader.CloudReader
+import com.github.aakumykov.cloud_reader.LocalCloudReader
+import com.github.aakumykov.cloud_reader.YandexCloudReader
 import com.github.aakumykov.cloud_reader_writer.databinding.ActivityMainBinding
 import com.github.aakumykov.cloud_reader_writer.extentions.getStringFromPreferences
 import com.github.aakumykov.cloud_reader_writer.extentions.storeStringInPreferences
@@ -49,7 +52,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        getStringFromPreferences(DIR_NAME)?.let { binding.dirNameInput.setText(it) }
+        getStringFromPreferences(DIR_NAME)?.let { binding.dirOrFileNameInput.setText(it) }
 
         permissionsRequester = constructPermissionsRequest(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -60,12 +63,13 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
         yandexAuthToken = getStringFromPreferences(YANDEX_AUTH_TOKEN)
         displayYandexAuthStatus()
 
-        binding.dirNameInput.addTextChangedListener { saveDirNameInput() }
+        binding.dirOrFileNameInput.addTextChangedListener { saveDirNameInput() }
         
         prepareButtons()
     }
 
     private fun prepareButtons() {
+
         binding.overwriteSwitch.setOnCheckedChangeListener { _, isChecked ->
             binding.overwriteSwitch.setText(if(isChecked) R.string.overwrite else R.string.do_not_overwrite)
         }
@@ -80,12 +84,38 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             }
         }
 
+        binding.getDownloadLinkButton.setOnClickListener { onGetDownloadLinkClicked() }
         binding.createDirButton.setOnClickListener { createDir() }
-        binding.checkDirExistsButton.setOnClickListener { checkDirExists(toggled()) }
+        binding.checkDirExistsButton.setOnClickListener { checkDirExists(isLocalChecked()) }
         binding.selectFileButton.setOnClickListener { pickFile() }
         binding.uploadFileButton.setOnClickListener { uploadFile() }
         binding.checkUploadedFileButton.setOnClickListener { checkUploadedFile() }
         binding.deleteDirButton.setOnClickListener { deleteDirectory() }
+    }
+
+    private fun onGetDownloadLinkClicked() {
+
+        hideInfo()
+        showProgressBar()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+
+            cloudReader.getDownloadLink(path).also { result ->
+
+                withContext(Dispatchers.Main) {
+
+                    hideProgressBar()
+
+                    if (result.isSuccess) {
+                        result.getOrNull()?.also { url ->
+                            showInfo(url)
+                        } ?: showError("Результат null :-(")
+                    } else {
+                        showError(result.exceptionOrNull())
+                    }
+                }
+            }
+        }
     }
 
     private fun deleteDirectory() {
@@ -116,10 +146,10 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     }
 
     private fun createDir() {
-        if (toggled())
-            createCloudDir()
-        else
+        if (isLocalChecked())
             createLocalDir()
+        else
+            createCloudDir()
     }
 
     private fun checkUploadedFile() {
@@ -147,10 +177,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     }
 
     private fun targetDir(): String
-        = if (toggled()) CANONICAL_ROOT_PATH else localMusicDirPath()
+        = if (isLocalChecked()) localMusicDirPath() else CANONICAL_ROOT_PATH
 
-
-    private fun toggled(): Boolean = binding.cloudTypeToggleButton.isChecked
 
 
     private fun pickFile() {
@@ -189,25 +217,24 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
 
     private fun isOverwrite(): Boolean = binding.overwriteSwitch.isChecked
 
-    private fun cloudWriter(): CloudWriter =
-        if (binding.cloudTypeToggleButton.isChecked) {
-            Log.d(TAG, "cloudWriter: YANDEX")
-            yandexCloudWriter()
-        }
-        else {
-            Log.d(TAG, "cloudWriter: LOCAL")
-            localCloudWriter()
-        }
+    private fun cloudWriter(): CloudWriter = if (isLocalChecked()) localCloudWriter() else yandexCloudWriter()
 
-    private fun checkDirExists(isCloud: Boolean) {
-        val cloudWriter = if (isCloud) yandexCloudWriter() else localCloudWriter()
-        val parentDirName: String = if (isCloud) "/" else localMusicDirPath()
+    private val cloudReader get(): CloudReader = if (isLocalChecked()) localCloudReader else yandexCloudReader
+
+    private fun isLocalChecked(): Boolean {
+        return !binding.cloudTypeYandexToggleButton.isChecked
+    }
+
+
+    private fun checkDirExists(isLocal: Boolean) {
+
+        val parentDirName: String = if (isLocal) localMusicDirPath() else "/"
 
         thread {
             try {
                 resetView()
                 showProgressBar()
-                val exists = cloudWriter.fileExists(parentDirName, dirName())
+                val exists = cloudWriter().fileExists(parentDirName, path)
                 showInfo(
                     when (exists) {
                         true -> "Папка существует"
@@ -233,7 +260,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     }
 
     private fun saveDirNameInput() {
-        storeStringInPreferences(DIR_NAME, dirName())
+        storeStringInPreferences(DIR_NAME, path)
     }
 
     private fun createCloudDir() {
@@ -241,8 +268,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             try {
                 resetView()
                 showProgressBar()
-                yandexCloudWriter().createDir("/", dirName())
-                showInfo("Папка ${dirName()} создана")
+                yandexCloudWriter().createDir("/", path)
+                showInfo("Папка ${path} создана")
             }
             catch(e: CloudWriter.AlreadyExistsException) {
                 showError("Папка уже существует")
@@ -265,8 +292,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
             try {
                 resetView()
                 showProgressBar()
-                localCloudWriter().createDir(localMusicDirPath(), dirName())
-                showInfo("Папка ${dirName()} создана")
+                localCloudWriter().createDir(localMusicDirPath(), path)
+                showInfo("Папка ${path} создана")
             }
             catch (t: Throwable) {
                 showError(t)
@@ -285,12 +312,19 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
 
     private fun localCloudWriter(): CloudWriter = LocalCloudWriter("")
 
-    private fun dirName(): String = binding.dirNameInput.text.toString()
+    private val localCloudReader get(): CloudReader = LocalCloudReader()
+    
+    private val yandexCloudReader get(): CloudReader = YandexCloudReader(yandexAuthToken!!, okHttpClient, gson)
 
-    private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(OkHttpClient.Builder().build(), Gson(), yandexAuthToken!!)
+    private val path get(): String = binding.dirOrFileNameInput.text.toString()
 
+    private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(okHttpClient, gson, yandexAuthToken!!)
 
+    private val okHttpClient get() = OkHttpClient.Builder().build()
 
+    private val gson get() = Gson()
+
+    
     override fun onCloudAuthSuccess(authToken: String) {
         yandexAuthToken = authToken
         storeStringInPreferences(YANDEX_AUTH_TOKEN, authToken)
@@ -320,10 +354,10 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks, FileSele
     }
 
     private fun hideProgressBar() {
-        binding.root.post { binding.progressBar.visibility = View.GONE }
+        binding.root.post { binding.progressBar.visibility = View.INVISIBLE }
     }
 
-    private fun showError(throwable: Throwable) {
+    private fun showError(throwable: Throwable?) {
         val errorMsg = ExceptionUtils.getErrorMessage(throwable)
         Log.e(TAG, errorMsg, throwable)
         showError(errorMsg)

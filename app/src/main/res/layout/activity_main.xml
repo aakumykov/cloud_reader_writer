@@ -6,20 +6,28 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         tools:context=".MainActivity">
 
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="invisible"
+            tools:visibility="visible" />
+
         <ToggleButton
-            android:id="@+id/cloudTypeToggleButton"
+            android:id="@+id/cloudTypeYandexToggleButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="true"
             android:text="ToggleButton"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textOff="Локальное &quot;облако&quot;"
+            android:textOff="Локальное хранилище"
             android:textOn="Яндекс.Диск" />
 
 
@@ -27,7 +35,8 @@
             android:id="@+id/overwriteSwitch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/do_not_overwrite" />
+            android:text="@string/do_not_overwrite"
+            android:textAlignment="viewEnd"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/yandexAuthButton"
@@ -39,12 +48,24 @@
             android:text="@string/login_to_yandex" />
 
         <EditText
-            android:id="@+id/dirNameInput"
+            android:id="@+id/dirOrFileNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:hint="Имя папки"
+            android:text="1.mp3"
+            android:hint="Имя папки / файла"
+            android:textAlignment="center"
             android:inputType="text" />
+
+        <Button
+            android:id="@+id/getDownloadLinkButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:backgroundTint="#2196F3"
+            android:text="Получить ссылку для скачивания"
+            app:icon="@drawable/ic_link"
+            app:iconGravity="textStart" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -113,15 +134,6 @@
             app:icon="@drawable/ic_folder_delete"
             app:iconGravity="textStart" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:indeterminate="true"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
         <TextView
             android:id="@+id/errorView"
             android:layout_width="match_parent"
@@ -137,6 +149,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             tools:text="NYoloPMAU,UR"
+            android:textIsSelectable="true"
             tools:visibility="visible" />
 
 
