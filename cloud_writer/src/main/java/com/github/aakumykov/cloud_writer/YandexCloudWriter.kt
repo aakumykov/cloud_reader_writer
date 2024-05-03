@@ -6,6 +6,7 @@ import com.yandex.disk.rest.json.Link
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -13,6 +14,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okio.BufferedSink
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -24,6 +26,8 @@ class YandexCloudWriter @AssistedInject constructor(
     @Assisted private val authToken: String
 ) : CloudWriter
 {
+    private val defaultMediaType: MediaType get() = DEFAULT_MEDIA_TYPE.toMediaType()
+
     // TODO: проверить с разными аргументами
     @Throws(
         IOException::class,
@@ -104,17 +108,21 @@ class YandexCloudWriter @AssistedInject constructor(
         }
     }
 
-    @Throws(
-        IOException::class,
-        CloudWriter.OperationUnsuccessfulException::class
-    )
+
+    @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
     override fun putFile(file: File, targetPath: String, overwriteIfExists: Boolean) {
 
         Log.d(TAG, "putFile() called with: file = $file, targetDirPath = $targetPath, overwriteIfExists = $overwriteIfExists")
 
         val uploadURL = getURLForUpload(targetPath, overwriteIfExists)
-
         putFileReal(file, uploadURL)
+    }
+
+
+    @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
+    override fun putFile(inputStream: InputStream, targetPath: String, overwriteIfExists: Boolean) {
+        val uploadURL = getURLForUpload(targetPath, overwriteIfExists)
+        putFileAsStreamReal(inputStream, uploadURL)
     }
 
 
@@ -263,7 +271,28 @@ class YandexCloudWriter @AssistedInject constructor(
 
         Log.d(TAG, "putFileReal() called with: file = $file, uploadURL = $uploadURL")
 
-        val requestBody: RequestBody = file.asRequestBody(DEFAULT_MEDIA_TYPE.toMediaType())
+        val requestBody: RequestBody = file.asRequestBody(defaultMediaType)
+
+        performUploadRequest(requestBody, uploadURL)
+    }
+
+    @Throws(IOException::class, CloudWriter.OperationUnsuccessfulException::class)
+    private fun putFileAsStreamReal(inputStream: InputStream, uploadURL: String) {
+
+        val requestBody: RequestBody = object: RequestBody() {
+
+            override fun contentType(): MediaType = defaultMediaType
+
+            override fun writeTo(sink: BufferedSink) {
+                inputStream.copyTo(sink.outputStream())
+            }
+        }
+
+        performUploadRequest(requestBody, uploadURL)
+    }
+
+
+    private fun performUploadRequest(requestBody: RequestBody, uploadURL: String) {
 
         val fileUploadRequest = Request.Builder()
             .put(requestBody)
@@ -281,10 +310,6 @@ class YandexCloudWriter @AssistedInject constructor(
 
     private fun alreadyExistsException(dirName: String): CloudWriter.AlreadyExistsException
             = CloudWriter.AlreadyExistsException(dirName)
-
-    override fun putFile(inputStream: InputStream, targetPath: String, overwriteIfExists: Boolean) {
-        TODO("Not yet implemented")
-    }
 
 
     private fun linkFromResponse(response: Response): String {

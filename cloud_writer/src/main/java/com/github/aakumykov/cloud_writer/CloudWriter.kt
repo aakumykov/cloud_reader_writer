@@ -4,6 +4,8 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 
+// TODO: suspend-методы
+// TODO: возвращать Result вместо выборса исключений
 interface CloudWriter {
 
     @Throws(
