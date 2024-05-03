@@ -10,12 +10,12 @@ project.ext {
 
     majorVersionCode = 0
     minorVersionCode = 0
-    patchVersionCode = 4
+    patchVersionCode = 5
     suffix = "alpha"
 
-    versionName = majorVersionCode + "." + minorVersionCode + "." + patchVersionCode + "-" + suffix
+    versionCode = 5
 
-    versionCode = 1
+    versionName = majorVersionCode + "." + minorVersionCode + "." + patchVersionCode + "-" + suffix
 }
 
 android {
