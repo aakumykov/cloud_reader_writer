@@ -9,12 +9,12 @@ project.ext {
     artifactId = 'cloud_writer'
     groupId = 'com.github.aakumykov'
 
-    majorVersionCode = 0
+    majorVersionCode = 1
     minorVersionCode = 0
-    patchVersionCode = 10
+    patchVersionCode = 0
     suffix = "alpha"
 
-    versionCode = 10
+    versionCode = 11
 
     versionName = majorVersionCode + "." + minorVersionCode + "." + patchVersionCode + "-" + suffix
 }

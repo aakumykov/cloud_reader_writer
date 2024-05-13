@@ -23,11 +23,9 @@ class LocalCloudWriter @AssistedInject constructor(
         val fullDirName = CloudWriter.composeFullPath(basePath, dirName)
 
         with(File(fullDirName)) {
-            if (exists())
-                throw CloudWriter.AlreadyExistsException(dirName)
-
-            if (!mkdirs())
-                throw CloudWriter.OperationUnsuccessfulException(0, dirNotCreatedMessage(absolutePath))
+            if (!exists())
+                if (!mkdirs())
+                    throw CloudWriter.OperationUnsuccessfulException(0, dirNotCreatedMessage(absolutePath))
         }
     }
 
