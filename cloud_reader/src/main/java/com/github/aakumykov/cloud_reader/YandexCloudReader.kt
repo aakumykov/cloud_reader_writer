@@ -75,7 +75,6 @@ class YandexCloudReader(
                     when(methodName) {
                         HttpMethod.HEADER -> paramsMap[methodName]?.let { header(it.name, it.value) }
                         HttpMethod.GET -> get()
-                        else -> throw IllegalArgumentException("Unknown method name: $methodName")
                     }
                 }
             }
