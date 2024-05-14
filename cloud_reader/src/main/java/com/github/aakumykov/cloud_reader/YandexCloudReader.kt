@@ -3,10 +3,13 @@ package com.github.aakumykov.cloud_reader
 import com.google.gson.Gson
 import com.yandex.disk.rest.json.ApiError
 import com.yandex.disk.rest.json.Link
+import com.yandex.disk.rest.json.Resource
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 
@@ -50,19 +53,42 @@ class YandexCloudReader(
         }
     }
 
+    override suspend fun fileExists(absolutePath: String): Result<Boolean> {
+        return try {
+            getFileInfoDirect(absolutePath).let { Result.success(true) }
+        }
+        catch (e: FileNotFoundException) {
+            Result.success(false)
+        }
+        catch (t: Throwable) {
+            Result.failure(t)
+        }
+    }
+
+
+    @Throws(IllegalArgumentException::class)
+    private fun httpRequest(url: HttpUrl, paramsMap: Map<HttpMethod,EmptyHttpParam>): Request {
+        return Request.Builder()
+            .url(url)
+            .apply {
+                paramsMap.keys.forEach { methodName ->
+                    when(methodName) {
+                        HttpMethod.HEADER -> paramsMap[methodName]?.let { header(it.name, it.value) }
+                        HttpMethod.GET -> get()
+                        else -> throw IllegalArgumentException("Unknown method name: $methodName")
+                    }
+                }
+            }
+            .build()
+    }
 
     @Throws(IOException::class, IllegalArgumentException::class)
     private fun getDownloadLinkDirect(absolutePath: String): String {
 
-        val url = DOWNLOAD_BASE_URL.toHttpUrl().newBuilder()
-            .apply {
-                addQueryParameter("path", absolutePath)
-            }.build()
-
-        val request = Request.Builder()
-            .url(url)
-            .header("Authorization", authToken)
-            .build()
+        val request = httpRequest(
+            urlWithPath(DOWNLOAD_BASE_URL, absolutePath),
+            mapOf(HttpMethod.HEADER to HttpParam("Authorization", authToken))
+        )
 
         return okHttpClient.newCall(request).execute().use { response ->
             when(response.code) {
@@ -70,6 +96,37 @@ class YandexCloudReader(
                 else -> throw exceptionFromErrorResponse(response)
             }
         }
+    }
+
+    @Throws(FileNotFoundException::class, IOException::class, IllegalArgumentException::class)
+    private fun getFileInfoDirect(absolutePath: String): Resource {
+
+        val request = httpRequest(
+            urlWithPath(RESOURCES_BASE_URL, absolutePath),
+            mapOf(HttpMethod.GET to EmptyHttpParam())
+        )
+
+        return okHttpClient.newCall(request).execute().use { response ->
+            when(response.code) {
+                200 -> resourceFromResponse(response)
+                404 -> throw FileNotFoundException("File not found: $absolutePath")
+                else -> throw exceptionFromErrorResponse(response)
+            }
+        }
+    }
+
+    private fun urlWithPath(baseUrl: String, absolutePath: String): HttpUrl {
+        return baseUrl.toHttpUrl().newBuilder()
+            .apply {
+                addQueryParameter("path", absolutePath)
+            }.build()
+    }
+
+
+    private fun resourceFromResponse(response: Response): Resource {
+        return response.body?.let {
+            return gson.fromJson(it.string(), Resource::class.java)
+        } ?: throw nullResponseBodyException()
     }
 
 
@@ -104,4 +161,12 @@ class YandexCloudReader(
         private const val RESOURCES_BASE_URL = "${DISK_BASE_URL}/resources"
         private const val DOWNLOAD_BASE_URL = "$RESOURCES_BASE_URL/download"
     }
+
+    private enum class HttpMethod {
+        HEADER, GET
+    }
+
+
+    private open class EmptyHttpParam(val name: String = "", val value: String = "")
+    private class HttpParam(name: String, value: String) : EmptyHttpParam(name, value)
 }

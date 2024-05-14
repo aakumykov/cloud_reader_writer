@@ -16,4 +16,12 @@ class LocalCloudReader : CloudReader {
             Result.failure(e)
         }
     }
+
+    override suspend fun fileExists(absolutePath: String): Result<Boolean> {
+        return try {
+            Result.success(File(absolutePath).exists())
+        } catch (t: Throwable) {
+            Result.failure(t)
+        }
+    }
 }
