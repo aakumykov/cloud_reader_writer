@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
@@ -9,6 +10,21 @@
           <set>
             <option value="$USER_HOME$/Рабочий стол/cloud_reader_writer" />
             <option value="$USER_HOME$/Рабочий стол/cloud_reader_writer/app" />
+            <option value="$USER_HOME$/Рабочий стол/cloud_reader_writer/cloud_reader" />
+            <option value="$USER_HOME$/Рабочий стол/cloud_reader_writer/cloud_writer" />
+          </set>
+        </option>
+        <option name="resolveExternalAnnotations" value="false" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/cloud_reader" />
+            <option value="$PROJECT_DIR$/cloud_writer" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

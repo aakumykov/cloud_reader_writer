@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">cloud_reader_writer</string>
+    <string name="do_not_overwrite">Не перезаписывать</string>
+    <string name="overwrite">Перезаписать</string>
+    <string name="login_to_yandex">Авторизоваться в Яндекс</string>
+    <string name="logout_from_yandex">Выйти из Яндекса</string>
+    <string name="question">\?</string>
 </resources>
