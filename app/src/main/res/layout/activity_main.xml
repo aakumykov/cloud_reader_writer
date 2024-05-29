@@ -24,13 +24,13 @@
                 android:layout_weight="0"
                 android:gravity="center|end"
                 android:paddingHorizontal="12dp"
-                android:text="Тип CloudReader:" />
+                android:text="Тип:" />
 
             <ToggleButton
                 android:id="@+id/cloudTypeYandexToggleButton"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:checked="true"
+                android:checked="false"
                 android:layout_weight="1"
                 android:text="ToggleButton"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
@@ -55,31 +55,35 @@
             app:iconGravity="textStart"
             android:text="@string/login_to_yandex" />
 
-        <com.google.android.material.textfield.TextInputLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/dirOrFileNameInput"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="1.mp3"
-                android:textAlignment="center"
-                android:hint="Имя файла/папки в облаке" />
+                android:layout_height="match_parent"
+                android:layout_weight="1">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/fileNameInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1.mp3"
+                    android:textAlignment="center"
+                    android:hint="Имя файла" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/checkFileExistsButton"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:backgroundTint="#FFEE58"
-            android:text="Проверить наличие"
-            android:textColor="#1E88E5"
-            app:iconTint="#1E88E5"
-            app:icon="@drawable/ic_question"
-            app:iconGravity="textStart" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/checkFileExistsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:backgroundTint="#FFEE58"
+                android:textColor="@color/black"
+                android:text="@string/question" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/getDownloadLinkButton"
@@ -104,15 +108,22 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="gone">
+            android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/createDirButton"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="Создать папку" />
+                android:layout_weight="1">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/dirNameInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Каталог-1"
+                    android:textAlignment="center"
+                    android:hint="Имя папки" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/checkDirExistsButton"
@@ -123,6 +134,11 @@
 
         </LinearLayout>
 
+        <Button
+            android:id="@+id/createDirButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Создать папку" />
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -28,6 +28,7 @@ import com.gitlab.aakumykov.exception_utils_module.ExceptionUtils
 import com.google.gson.Gson
 import com.yandex.authsdk.internal.strategy.LoginType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -52,7 +53,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         storageAccessHelper = StorageAccessHelper.create(this)
         storageAccessHelper.prepareForReadAccess()
 
-        getStringFromPreferences(FILE_OR_DIR_NAME)?.let { binding.dirOrFileNameInput.setText(it) }
+        restoreInputFields()
 
         permissionsRequester = constructPermissionsRequest(
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -63,9 +64,18 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         yandexAuthToken = getStringFromPreferences(YANDEX_AUTH_TOKEN)
         displayYandexAuthStatus()
 
-        binding.dirOrFileNameInput.addTextChangedListener { saveDirNameInput() }
-        
         prepareButtons()
+        prepareInputFields()
+    }
+
+    private fun prepareInputFields() {
+        binding.fileNameInput.addTextChangedListener { storeStringInPreferences(FILE_NAME, fileName) }
+        binding.dirNameInput.addTextChangedListener { storeStringInPreferences(DIR_NAME, fileName) }
+    }
+
+    private fun restoreInputFields() {
+        getStringFromPreferences(FILE_NAME)?.let { binding.fileNameInput.setText(it) }
+        getStringFromPreferences(DIR_NAME)?.let { binding.dirNameInput.setText(it) }
     }
 
     private fun prepareLayout() {
@@ -110,9 +120,10 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
                 getInputStreamOfFile()
         }
 
-//        binding.createDirButton.setOnClickListener { createDir() }
-//        binding.checkDirExistsButton.setOnClickListener { checkDirExists(isLocalChecked) }
-//        binding.selectFileButton.setOnClickListener { pickFile() }
+        binding.createDirButton.setOnClickListener { createDir() }
+        binding.checkDirExistsButton.setOnClickListener { checkDirExists() }
+
+    //        binding.selectFileButton.setOnClickListener { pickFile() }
 //        binding.uploadFileButton.setOnClickListener { uploadFile() }
 //        binding.checkUploadedFileButton.setOnClickListener { checkUploadedFile() }
 //        binding.deleteDirButton.setOnClickListener { deleteDirectory() }
@@ -123,10 +134,10 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
 
         beginAndBusy()
 
-
+        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(fileName) else fileName
 
         lifecycleScope.launch(Dispatchers.IO) {
-            cloudReader.fileExists(path).also { result ->
+            cloudReader.fileExists(fullFileName).also { result ->
 
                 withContext(Dispatchers.Main) {
                     hideProgressBar()
@@ -134,7 +145,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
                     if (result.isSuccess) {
                         result.getOrNull()?.also { isExists ->
                             val isExistsWord = if (isExists) "существует" else "Не существует"
-                            showInfo("Файл ${path} $isExistsWord")
+                            showInfo("Файл ${fileName} $isExistsWord")
                         } ?: showError("Результат null :-(")
                     } else {
                         showError(result.exceptionOrNull())
@@ -146,11 +157,13 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
 
     private fun onGetDownloadLinkClicked() {
 
+        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(fileName) else fileName
+
         beginAndBusy()
 
         lifecycleScope.launch(Dispatchers.IO) {
 
-            cloudReader.getDownloadLink(path).also { result ->
+            cloudReader.getDownloadLink(fullFileName).also { result ->
 
                 withContext(Dispatchers.Main) {
 
@@ -173,7 +186,7 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         beginAndBusy()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            cloudReader.getFileInputStream(path).also { result ->
+            cloudReader.getFileInputStream(fileName).also { result ->
                 withContext(Dispatchers.Main) { hideProgressBar() }
 
                 try {
@@ -228,6 +241,26 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
             createLocalDir()
         else
             createCloudDir()
+    }
+
+    private fun checkDirExists() {
+
+        beginAndBusy()
+
+        val fullDirPath = if (isLocalChecked) dirPathInLocalDownloads(dirName) else dirName
+
+        lifecycleScope.launch(Dispatchers.IO){
+            cloudReader.fileExists(fullDirPath)
+                .onSuccess { isExists ->
+                    if (isExists) showInfo("${dirName} существует")
+                    else showInfo("${dirName} НЕ существует") }
+                .onFailure {
+                    showError(it)
+                }
+                .also {
+                    hideProgressBar()
+                }
+        }
     }
 
     /*private fun checkUploadedFile() {
@@ -331,20 +364,18 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
 
     override fun onDestroy() {
         super.onDestroy()
-        saveDirNameInput()
+        storeStringInPreferences(FILE_NAME, fileName)
+        storeStringInPreferences(DIR_NAME, dirName)
     }
 
-    private fun saveDirNameInput() {
-        storeStringInPreferences(FILE_OR_DIR_NAME, path)
-    }
 
     private fun createCloudDir() {
         thread {
             try {
                 resetView()
                 showProgressBar()
-                yandexCloudWriter().createDir("/", path)
-                showInfo("Папка ${path} создана")
+                yandexCloudWriter().createDir("/", dirName)
+                showInfo("Папка ${dirName} создана")
             }
             catch(e: CloudWriter.AlreadyExistsException) {
                 showError("Папка уже существует")
@@ -367,8 +398,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
             try {
                 resetView()
                 showProgressBar()
-                localCloudWriter().createDir(localMusicDirPath(), path)
-                showInfo("Папка ${path} создана")
+                localCloudWriter().createDir(localDownloadsDirPath(), dirName)
+                showInfo("Папка \"${dirName}\" создана")
             }
             catch (t: Throwable) {
                 showError(t)
@@ -396,14 +427,18 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
             gson
         )
 
-    private val path
-        get(): String = binding.dirOrFileNameInput.text.toString().let {
-            if (isLocalChecked) filePathInLocalDownloads(it)
-            else it
-        }
+    private val fileName
+        get(): String = binding.fileNameInput.text.toString()
 
-    private fun filePathInLocalDownloads(fileOrDirName: String): String {
-        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/" + fileOrDirName
+    private val dirName
+        get(): String = binding.dirNameInput.text.toString()
+
+    private fun filePathInLocalDownloads(name: String): String {
+        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/" + name
+    }
+
+    private fun dirPathInLocalDownloads(name: String): String {
+        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/" + name
     }
 
     private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(okHttpClient, gson, yandexAuthToken!!)
@@ -493,7 +528,8 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
         const val YANDEX_AUTH_TOKEN = "AUTH_TOKEN"
-        const val FILE_OR_DIR_NAME = "FILE_OR_DIR_NAME"
+        const val FILE_NAME = "FILE_NAME"
+        const val DIR_NAME = "DIR_NAME"
         const val CANONICAL_ROOT_PATH = "/"
     }
 
@@ -503,6 +539,6 @@ class MainActivity : AppCompatActivity(), CloudAuthenticator.Callbacks {
         showInfo("Выбран файл '${selectedFile?.name}'")
     }*/
 
-    private fun downloadsDirPath(): String =
+    private fun localDownloadsDirPath(): String =
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
 }
