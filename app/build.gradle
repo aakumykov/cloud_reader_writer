@@ -39,26 +39,26 @@ android {
 
 dependencies {
 
-    implementation libs.androidx.core.ktx
-    implementation libs.androidx.appcompat.v170
-    implementation libs.material
-    
-    implementation libs.androidx.constraintlayout
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.12.0'
+
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation project(path: ':cloud_writer')
     implementation project(':cloud_reader')
-    testImplementation libs.junit
-    androidTestImplementation libs.androidx.junit
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
 
 //    implementation 'com.google.dagger:dagger:2.48.1'
 //    kapt 'com.google.dagger:dagger-compiler:2.48.1'
 
-    implementation libs.authsdk
+    implementation 'com.yandex.android:authsdk:3.0.0'
 
-    implementation libs.androidx.preference.ktx
+    implementation "androidx.preference:preference-ktx:1.2.1"
 
-    implementation libs.exception.utils
+    implementation 'com.github.aakumykov:exception_utils:0.4'
 
-    implementation libs.storage.access.helper
+    implementation 'com.github.aakumykov:storage_access_helper:1.0.1-alpha'
 
-    implementation libs.androidx.fragment.ktx
+    implementation 'androidx.fragment:fragment-ktx:1.6.2'
 }
