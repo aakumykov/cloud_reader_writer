@@ -11,8 +11,7 @@
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout="@layout/fragment_reading_and_dir_creaton"/>
+        android:layout_height="match_parent"/>
 
 </LinearLayout>
 
