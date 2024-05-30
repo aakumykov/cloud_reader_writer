@@ -35,8 +35,10 @@ import permissions.dispatcher.ktx.constructPermissionsRequest
 import java.io.InputStream
 import kotlin.concurrent.thread
 
-class ReadingAndDirCreationFragment : Fragment(R.layout.fragment_reading_and_dir_creaton), CloudAuthenticator.Callbacks {
-
+class ReadingAndDirCreationFragment :
+    Fragment(R.layout.fragment_reading_and_dir_creaton),
+    CloudAuthenticator.Callbacks
+{
     private var _binding: FragmentReadingAndDirCreatonBinding? = null
     private val binding get() = _binding!!
 
@@ -71,13 +73,17 @@ class ReadingAndDirCreationFragment : Fragment(R.layout.fragment_reading_and_dir
 
     override fun onDestroyView() {
         super.onDestroyView()
+
+        storeStringInPreferences(FILE_NAME, fileName)
+        storeStringInPreferences(DIR_NAME, dirName)
+
         _binding = null
     }
 
 
     private fun prepareInputFields() {
         binding.fileNameInput.addTextChangedListener { storeStringInPreferences(FILE_NAME, fileName) }
-        binding.dirNameInput.addTextChangedListener { storeStringInPreferences(DIR_NAME, fileName) }
+        binding.dirNameInput.addTextChangedListener { storeStringInPreferences(DIR_NAME, dirName) }
     }
 
     private fun restoreInputFields() {
@@ -353,13 +359,6 @@ class ReadingAndDirCreationFragment : Fragment(R.layout.fragment_reading_and_dir
         hideInfo()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        storeStringInPreferences(FILE_NAME, fileName)
-        storeStringInPreferences(DIR_NAME, dirName)
-    }
-
-
     private fun createCloudDir() {
         thread {
             try {
@@ -533,8 +532,6 @@ class ReadingAndDirCreationFragment : Fragment(R.layout.fragment_reading_and_dir
         const val DIR_NAME = "DIR_NAME"
         const val CANONICAL_ROOT_PATH = "/"
 
-        fun create(): Fragment {
-            return ReadingAndDirCreationFragment()
-        }
+        fun create(): Fragment = ReadingAndDirCreationFragment()
     }
 }
