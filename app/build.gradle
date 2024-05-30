@@ -59,4 +59,6 @@ dependencies {
     implementation 'com.github.aakumykov:exception_utils:0.4'
 
     implementation 'com.github.aakumykov:storage_access_helper:1.0.1-alpha'
+
+    implementation 'androidx.fragment:fragment-ktx:1.6.2'
 }

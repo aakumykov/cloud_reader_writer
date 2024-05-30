@@ -5,4 +5,6 @@
     <string name="login_to_yandex">Авторизоваться в Яндекс</string>
     <string name="logout_from_yandex">Выйти из Яндекса</string>
     <string name="question">\?</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
