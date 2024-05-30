@@ -53,8 +53,10 @@ class ReadingAndDirCreationFragment :
 
         _binding = FragmentReadingAndDirCreatonBinding.bind(view)
 
-        storageAccessHelper = StorageAccessHelper.create(this)
-        storageAccessHelper.prepareForReadAccess()
+        storageAccessHelper = StorageAccessHelper.create(this).apply {
+            prepareForReadAccess()
+            prepareForWriteAccess()
+        }
 
         restoreInputFields()
 
@@ -74,16 +76,16 @@ class ReadingAndDirCreationFragment :
     override fun onDestroyView() {
         super.onDestroyView()
 
-        storeStringInPreferences(FILE_NAME, fileName)
-        storeStringInPreferences(DIR_NAME, dirName)
+        storeStringInPreferences(FILE_NAME, inputFileName)
+        storeStringInPreferences(DIR_NAME, inputDirName)
 
         _binding = null
     }
 
 
     private fun prepareInputFields() {
-        binding.fileNameInput.addTextChangedListener { storeStringInPreferences(FILE_NAME, fileName) }
-        binding.dirNameInput.addTextChangedListener { storeStringInPreferences(DIR_NAME, dirName) }
+        binding.fileNameInput.addTextChangedListener { storeStringInPreferences(FILE_NAME, inputFileName) }
+        binding.dirNameInput.addTextChangedListener { storeStringInPreferences(DIR_NAME, inputDirName) }
     }
 
     private fun restoreInputFields() {
@@ -109,6 +111,7 @@ class ReadingAndDirCreationFragment :
 
         binding.checkFileExistsButton.setOnClickListener { checkFileExists() }
         binding.getDownloadLinkButton.setOnClickListener { onGetDownloadLinkClicked() }
+        binding.writeToFileButton.setOnClickListener { onWriteToFileButtonClicked() }
 
         binding.getInputStreamButton.setOnClickListener {
             if (cloudReader is LocalCloudReader)
@@ -126,12 +129,47 @@ class ReadingAndDirCreationFragment :
 //        binding.deleteDirButton.setOnClickListener { deleteDirectory() }
     }
 
+    private fun onWriteToFileButtonClicked() {
+        if (isLocalChecked)
+            storageAccessHelper.requestWriteAccess { writeStreamToFile() }
+        else
+            writeStreamToFile()
+    }
+
+    private fun writeStreamToFile() {
+
+        val sourceFilePath = if (isLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
+        val targetFilePath = if (isLocalChecked) filePathInLocalDownloads("target_$inputFileName") else "target_$inputFileName"
+
+        showInfo("$sourceFilePath --> $targetFilePath")
+
+        showProgressBar()
+
+        lifecycleScope.launch (Dispatchers.IO) {
+            try {
+                cloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
+                    cloudWriter.putFile(
+                        inputStream,
+                        targetFilePath,
+                        true
+                    )
+                }
+            }
+            catch (e: Exception) {
+                showError(e)
+            }
+            finally {
+                hideProgressBar()
+            }
+        }
+    }
+
 
     private fun checkFileExists() {
 
         beginAndBusy()
 
-        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(fileName) else fileName
+        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
 
         lifecycleScope.launch(Dispatchers.IO) {
             cloudReader.fileExists(fullFileName).also { result ->
@@ -142,7 +180,7 @@ class ReadingAndDirCreationFragment :
                     if (result.isSuccess) {
                         result.getOrNull()?.also { isExists ->
                             val isExistsWord = if (isExists) "существует" else "Не существует"
-                            showInfo("Файл ${fileName} $isExistsWord")
+                            showInfo("Файл ${inputFileName} $isExistsWord")
                         } ?: showError("Результат null :-(")
                     } else {
                         showError(result.exceptionOrNull())
@@ -154,7 +192,7 @@ class ReadingAndDirCreationFragment :
 
     private fun onGetDownloadLinkClicked() {
 
-        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(fileName) else fileName
+        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
 
         beginAndBusy()
 
@@ -183,7 +221,7 @@ class ReadingAndDirCreationFragment :
         beginAndBusy()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            cloudReader.getFileInputStream(fileName).also { result ->
+            cloudReader.getFileInputStream(inputFileName).also { result ->
                 withContext(Dispatchers.Main) { hideProgressBar() }
 
                 try {
@@ -244,13 +282,13 @@ class ReadingAndDirCreationFragment :
 
         beginAndBusy()
 
-        val fullDirPath = if (isLocalChecked) dirPathInLocalDownloads(dirName) else dirName
+        val fullDirPath = if (isLocalChecked) dirPathInLocalDownloads(inputDirName) else inputDirName
 
         lifecycleScope.launch(Dispatchers.IO){
             cloudReader.fileExists(fullDirPath)
                 .onSuccess { isExists ->
-                    if (isExists) showInfo("${dirName} существует")
-                    else showInfo("${dirName} НЕ существует") }
+                    if (isExists) showInfo("${inputDirName} существует")
+                    else showInfo("${inputDirName} НЕ существует") }
                 .onFailure {
                     showError(it)
                 }
@@ -328,6 +366,8 @@ class ReadingAndDirCreationFragment :
 
     private val cloudReader get(): CloudReader = if (isLocalChecked) localCloudReader else yandexCloudReader
 
+    private val cloudWriter get(): CloudWriter = if (isLocalChecked) localCloudWriter else yandexCloudWriter
+
     private val isLocalChecked get(): Boolean = !binding.cloudTypeYandexToggleButton.isChecked
 
 
@@ -364,8 +404,8 @@ class ReadingAndDirCreationFragment :
             try {
                 resetView()
                 showProgressBar()
-                yandexCloudWriter().createDir("/", dirName)
-                showInfo("Папка ${dirName} создана")
+                yandexCloudWriter.createDir("/", inputDirName)
+                showInfo("Папка ${inputDirName} создана")
             }
             catch(e: CloudWriter.AlreadyExistsException) {
                 showError("Папка уже существует")
@@ -388,8 +428,8 @@ class ReadingAndDirCreationFragment :
             try {
                 resetView()
                 showProgressBar()
-                localCloudWriter().createDir(localDownloadsDirPath(), dirName)
-                showInfo("Папка \"${dirName}\" создана")
+                localCloudWriter.createDir(localDownloadsDirPath(), inputDirName)
+                showInfo("Папка \"${inputDirName}\" создана")
             }
             catch (t: Throwable) {
                 showError(t)
@@ -406,7 +446,7 @@ class ReadingAndDirCreationFragment :
     }
 
 
-    private fun localCloudWriter(): CloudWriter = LocalCloudWriter("")
+    private val localCloudWriter get(): CloudWriter = LocalCloudWriter("")
 
     private val localCloudReader get(): CloudReader = LocalCloudReader()
 
@@ -417,10 +457,10 @@ class ReadingAndDirCreationFragment :
             gson
         )
 
-    private val fileName
+    private val inputFileName
         get(): String = binding.fileNameInput.text.toString()
 
-    private val dirName
+    private val inputDirName
         get(): String = binding.dirNameInput.text.toString()
 
     private fun filePathInLocalDownloads(name: String): String {
@@ -431,7 +471,7 @@ class ReadingAndDirCreationFragment :
         return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/" + name
     }
 
-    private fun yandexCloudWriter(): CloudWriter = YandexCloudWriter(okHttpClient, gson, yandexAuthToken!!)
+    private val yandexCloudWriter get(): CloudWriter = YandexCloudWriter(okHttpClient, gson, yandexAuthToken!!)
 
     private val okHttpClient get() = OkHttpClient.Builder().build()
 
