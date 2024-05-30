@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager
             .beginTransaction()
-            .replace(R.id.fragmentContainerView, Fragment1())
+            .replace(R.id.fragmentContainerView2, Fragment1())
             .commit()
     }
 }
