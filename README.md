@@ -1,4 +1,4 @@
-Демо-приложение (написанное на коленке) для библиотек [cloud_reader](https://github.com/aakumykov/cloud_reader) и [cloud_writer](https://github.com/aakumykov/cloud_writer).
+Демо-приложение (написанное на коленке) для библиотек [cloud_reader](https://github.com/aakumykov/cloud_reader) и [cloud_writer](https://github.com/aakumykov/cloud_writer). Смотрите в первую очередь библиотеки.
 
 Для использования клонируйте репозиторий и инициализируйте git-подмодули.
 
