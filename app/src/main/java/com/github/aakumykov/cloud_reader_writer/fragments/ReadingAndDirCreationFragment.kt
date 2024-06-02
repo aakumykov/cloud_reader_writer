@@ -20,6 +20,7 @@ import com.github.aakumykov.cloud_reader_writer.databinding.FragmentReadingAndDi
 import com.github.aakumykov.cloud_reader_writer.extentions.getStringFromPreferences
 import com.github.aakumykov.cloud_reader_writer.extentions.storeStringInPreferences
 import com.github.aakumykov.cloud_writer.CloudWriter
+import com.github.aakumykov.cloud_writer.CountingOutputStream
 import com.github.aakumykov.cloud_writer.LocalCloudWriter
 import com.github.aakumykov.cloud_writer.YandexCloudWriter
 import com.github.aakumykov.storage_access_helper.StorageAccessHelper
@@ -152,6 +153,11 @@ class ReadingAndDirCreationFragment :
                     cloudWriter.putFile(
                         inputStream,
                         targetFilePath,
+                        object: CountingOutputStream.Callback{
+                            override fun onCountChanged(count: Long) {
+                                Log.d(TAG, "Байт записано: $count")
+                            }
+                        },
                         true
                     )
                 }
@@ -180,7 +186,7 @@ class ReadingAndDirCreationFragment :
 
                     if (result.isSuccess) {
                         result.getOrNull()?.also { isExists ->
-                            val isExistsWord = if (isExists) "существует" else "Не существует"
+                            val isExistsWord = if (isExists) "существует" else "не существует"
                             showInfo("Файл ${inputFileName} $isExistsWord")
                         } ?: showError("Результат null :-(")
                     } else {
