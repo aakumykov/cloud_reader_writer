@@ -12,39 +12,50 @@
         android:orientation="vertical"
         tools:context=".MainActivity">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
+        <TextView
+            android:id="@+id/sourceTypeLabel"
+            android:text="@string/source_type_label"
+            style="@style/storage_type_label" />
 
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:gravity="center|end"
-                android:paddingHorizontal="12dp"
-                android:text="Тип:" />
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/sourceTypeToggleButton"
+            style="@style/storage_type_toggle_button">
 
-            <ToggleButton
-                android:id="@+id/cloudTypeYandexToggleButton"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:checked="false"
-                android:layout_weight="1"
-                android:text="ToggleButton"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textOff="Локальное хранилище"
-                android:textOn="Яндекс.Диск" />
-        </LinearLayout>
+            <!--style="?attr/materialButtonOutlinedStyle"-->
+            <Button
+                android:id="@+id/sourceTypeLocal"
+                style="@style/local_storage_type_button"
+                android:text="@string/type_name_local" />
+
+            <Button
+                android:id="@+id/sourceTypeYandexDisk"
+                style="@style/yandex_disk_storage_type_button"
+                android:text="@string/type_name_yandex_disk" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
 
 
-        <!--<Switch
-            android:id="@+id/overwriteSwitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/do_not_overwrite"
-            android:textAlignment="viewEnd"/>-->
+        <TextView
+            android:id="@+id/targetTypeLabel"
+            android:text="@string/target_type_label"
+            style="@style/storage_type_label" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/targetTypeToggleButton"
+            style="@style/storage_type_toggle_button">
+
+            <Button
+                android:id="@+id/targetTypeLocal"
+                style="@style/local_storage_type_button"
+                android:text="@string/type_name_local" />
+
+            <Button
+                android:id="@+id/targetTypeYandexDisk"
+                style="@style/yandex_disk_storage_type_button"
+                android:text="@string/type_name_yandex_disk" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/yandexAuthButton"
@@ -182,7 +193,7 @@
                 android:layout_weight="1"
                 android:backgroundTint="#66BB6A"
                 android:text="Отправить"
-                app:icon="@drawable/ic_upload"
+                app:icon="@drawable/ic_target_label"
                 app:iconGravity="textEnd" />
 
             <Button

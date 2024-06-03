@@ -1,11 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Фрагмент-1" />
-</FrameLayout>
+        android:id="@+id/sourceTypeLabel"
+        android:text="@string/source_type_label"
+        style="@style/storage_type_label" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/sourceTypeToggleButton"
+        style="@style/storage_type_toggle_button">
+
+        <Button
+            android:id="@+id/sourceTypeLocal"
+            style="@style/local_storage_type_button"
+            android:text="@string/type_name_local"/>
+
+        <Button
+            android:id="@+id/sourceTypeYandexDisk"
+            style="@style/yandex_disk_storage_type_button"
+            android:text="@string/type_name_yandex_disk" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+
+    <TextView
+        android:id="@+id/targetTypeLabel"
+        android:text="@string/target_type_label"
+        style="@style/storage_type_label" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/targetTypeToggleButton"
+        style="@style/storage_type_toggle_button">
+
+        <Button
+            android:id="@+id/targetTypeLocal"
+            style="@style/local_storage_type_button"
+            android:text="@string/type_name_local" />
+
+        <Button
+            android:id="@+id/targetTypeYandexDisk"
+            style="@style/yandex_disk_storage_type_button"
+            android:text="@string/type_name_yandex_disk" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+
+</LinearLayout>

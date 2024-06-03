@@ -3,6 +3,7 @@ package com.github.aakumykov.cloud_reader_writer
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.github.aakumykov.cloud_reader_writer.databinding.ActivityMainBinding
+import com.github.aakumykov.cloud_reader_writer.fragments.Fragment1
 import com.github.aakumykov.cloud_reader_writer.fragments.ReadingAndDirCreationFragment
 
 class MainActivity : AppCompatActivity() {
@@ -17,7 +18,11 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager
             .beginTransaction()
-            .replace(R.id.fragmentContainerView, ReadingAndDirCreationFragment.create())
+            .replace(
+                R.id.fragmentContainerView,
+                ReadingAndDirCreationFragment.create()
+//                Fragment1.create()
+            )
             .commit()
     }
 }

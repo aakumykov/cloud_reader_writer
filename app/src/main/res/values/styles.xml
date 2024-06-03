@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="storage_type_button" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="local_storage_type_button" parent="storage_type_button">
+        <item name="icon">@drawable/ic_storage_type_local</item>
+    </style>
+
+    <style name="yandex_disk_storage_type_button" parent="storage_type_button">
+        <item name="icon">@drawable/ic_storage_type_yandex_disk</item>
+        <!--<item name="backgroundTint">@color/yandex_disk</item>-->
+    </style>
+
+    <style name="storage_type_toggle_button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="selectionRequired">true</item>
+        <item name="singleSelection">true</item>
+    </style>
+
+    <style name="storage_type_label">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/design_default_color_primary_dark</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+</resources>

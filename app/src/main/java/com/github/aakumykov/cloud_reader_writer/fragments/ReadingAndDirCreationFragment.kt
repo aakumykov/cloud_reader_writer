@@ -114,7 +114,7 @@ class ReadingAndDirCreationFragment :
         binding.writeToFileButton.setOnClickListener { onWriteToFileButtonClicked() }
 
         binding.getInputStreamButton.setOnClickListener {
-            if (cloudReader is LocalCloudReader)
+            if (sourceCloudReader is LocalCloudReader)
                 storageAccessHelper.requestReadAccess { getInputStreamOfFile() }
             else
                 getInputStreamOfFile()
@@ -130,7 +130,7 @@ class ReadingAndDirCreationFragment :
     }
 
     private fun onWriteToFileButtonClicked() {
-        if (isLocalChecked)
+        if (targetIsLocalChecked)
             storageAccessHelper.requestWriteAccess { writeStreamToFile() }
         else
             writeStreamToFile()
@@ -138,8 +138,9 @@ class ReadingAndDirCreationFragment :
 
     private fun writeStreamToFile() {
 
-        val sourceFilePath = if (isLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
-        val targetFilePath = if (isLocalChecked) filePathInLocalDownloads("target_$inputFileName") else "target_$inputFileName"
+        val sourceFilePath = if (sourceIsLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
+
+        val targetFilePath = if (targetIsLocalChecked) filePathInLocalDownloads("target_$inputFileName") else "target_$inputFileName"
 
         showInfo("$sourceFilePath --> $targetFilePath")
 
@@ -147,7 +148,7 @@ class ReadingAndDirCreationFragment :
 
         lifecycleScope.launch (Dispatchers.IO) {
             try {
-                cloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
+                sourceCloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
                     cloudWriter.putFile(
                         inputStream,
                         targetFilePath,
@@ -169,10 +170,10 @@ class ReadingAndDirCreationFragment :
 
         beginAndBusy()
 
-        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
+        val fullFileName = if (sourceIsLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
 
         lifecycleScope.launch(Dispatchers.IO) {
-            cloudReader.fileExists(fullFileName).also { result ->
+            sourceCloudReader.fileExists(fullFileName).also { result ->
 
                 withContext(Dispatchers.Main) {
                     hideProgressBar()
@@ -192,13 +193,13 @@ class ReadingAndDirCreationFragment :
 
     private fun onGetDownloadLinkClicked() {
 
-        val fullFileName = if (isLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
+        val fullFileName = if (sourceIsLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
 
         beginAndBusy()
 
         lifecycleScope.launch(Dispatchers.IO) {
 
-            cloudReader.getDownloadLink(fullFileName).also { result ->
+            sourceCloudReader.getDownloadLink(fullFileName).also { result ->
 
                 withContext(Dispatchers.Main) {
 
@@ -221,7 +222,7 @@ class ReadingAndDirCreationFragment :
         beginAndBusy()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            cloudReader.getFileInputStream(inputFileName).also { result ->
+            sourceCloudReader.getFileInputStream(inputFileName).also { result ->
                 withContext(Dispatchers.Main) { hideProgressBar() }
 
                 try {
@@ -272,7 +273,7 @@ class ReadingAndDirCreationFragment :
     }*/
 
     private fun createDir() {
-        if (isLocalChecked)
+        if (sourceIsLocalChecked)
             createLocalDir()
         else
             createCloudDir()
@@ -282,10 +283,10 @@ class ReadingAndDirCreationFragment :
 
         beginAndBusy()
 
-        val fullDirPath = if (isLocalChecked) dirPathInLocalDownloads(inputDirName) else inputDirName
+        val fullDirPath = if (sourceIsLocalChecked) dirPathInLocalDownloads(inputDirName) else inputDirName
 
         lifecycleScope.launch(Dispatchers.IO){
-            cloudReader.fileExists(fullDirPath)
+            sourceCloudReader.fileExists(fullDirPath)
                 .onSuccess { isExists ->
                     if (isExists) showInfo("${inputDirName} существует")
                     else showInfo("${inputDirName} НЕ существует") }
@@ -323,7 +324,7 @@ class ReadingAndDirCreationFragment :
     }*/
 
     private fun targetDir(): String =
-        if (isLocalChecked) localMusicDirPath() else CANONICAL_ROOT_PATH
+        if (sourceIsLocalChecked) localMusicDirPath() else CANONICAL_ROOT_PATH
 
 
     /*private fun pickFile() {
@@ -364,11 +365,13 @@ class ReadingAndDirCreationFragment :
 
 //    private fun cloudWriter(): CloudWriter = if (isLocalChecked) localCloudWriter() else yandexCloudWriter()
 
-    private val cloudReader get(): CloudReader = if (isLocalChecked) localCloudReader else yandexCloudReader
+    private val sourceCloudReader get(): CloudReader = if (sourceIsLocalChecked) localCloudReader else yandexCloudReader
 
-    private val cloudWriter get(): CloudWriter = if (isLocalChecked) localCloudWriter else yandexCloudWriter
+    private val cloudWriter get(): CloudWriter = if (targetIsLocalChecked) localCloudWriter else yandexCloudWriter
 
-    private val isLocalChecked get(): Boolean = !binding.cloudTypeYandexToggleButton.isChecked
+    private val sourceIsLocalChecked get(): Boolean = binding.sourceTypeToggleButton.checkedButtonId == R.id.sourceTypeLocal
+
+    private val targetIsLocalChecked get(): Boolean = binding.sourceTypeToggleButton.checkedButtonId == R.id.targetTypeLocal
 
 
     /*private fun checkDirExists(isLocal: Boolean) {
