@@ -12,15 +12,17 @@ import androidx.lifecycle.lifecycleScope
 import com.github.aakumykov.cloud_reader.CloudReader
 import com.github.aakumykov.cloud_reader.local_cloud_reader.LocalCloudReader
 import com.github.aakumykov.cloud_reader.yandex_cloud_reader.YandexCloudReader
+import com.github.aakumykov.cloud_reader_writer.CountingInputStream
 import com.github.aakumykov.cloud_reader_writer.MainActivity
 import com.github.aakumykov.cloud_reader_writer.R
 import com.github.aakumykov.cloud_reader_writer.cloud_authenticator.CloudAuthenticator
 import com.github.aakumykov.cloud_reader_writer.cloud_authenticator.YandexAuthenticator
 import com.github.aakumykov.cloud_reader_writer.databinding.FragmentReadingAndDirCreatonBinding
+import com.github.aakumykov.cloud_reader_writer.extentions.getBooleanFromPreferences
 import com.github.aakumykov.cloud_reader_writer.extentions.getStringFromPreferences
+import com.github.aakumykov.cloud_reader_writer.extentions.storeBooleanInPreferences
 import com.github.aakumykov.cloud_reader_writer.extentions.storeStringInPreferences
 import com.github.aakumykov.cloud_writer.CloudWriter
-import com.github.aakumykov.cloud_writer.CountingOutputStream
 import com.github.aakumykov.cloud_writer.LocalCloudWriter
 import com.github.aakumykov.cloud_writer.YandexCloudWriter
 import com.github.aakumykov.storage_access_helper.StorageAccessHelper
@@ -80,18 +82,44 @@ class ReadingAndDirCreationFragment :
         storeStringInPreferences(FILE_NAME, inputFileName)
         storeStringInPreferences(DIR_NAME, inputDirName)
 
+        storeSorceAndTargetTypes()
+
         _binding = null
+    }
+
+    private fun storeSorceAndTargetTypes() {
+        storeBooleanInPreferences(IS_LOCAL_SOURCE_CHECKED, sourceIsLocalChecked)
+        storeBooleanInPreferences(IS_LOCAL_TARGET_CHECKED, targetIsLocalChecked)
     }
 
 
     private fun prepareInputFields() {
         binding.fileNameInput.addTextChangedListener { storeStringInPreferences(FILE_NAME, inputFileName) }
         binding.dirNameInput.addTextChangedListener { storeStringInPreferences(DIR_NAME, inputDirName) }
+
+        binding.sourceTypeToggleButton.addOnButtonCheckedListener { _, _, _ ->
+            storeSorceAndTargetTypes()
+        }
+
+        binding.targetTypeToggleButton.addOnButtonCheckedListener { _, _, _ ->
+            storeSorceAndTargetTypes()
+        }
     }
 
     private fun restoreInputFields() {
+
         getStringFromPreferences(FILE_NAME)?.let { binding.fileNameInput.setText(it) }
         getStringFromPreferences(DIR_NAME)?.let { binding.dirNameInput.setText(it) }
+
+        binding.sourceTypeToggleButton.check(
+            if (getBooleanFromPreferences(IS_LOCAL_SOURCE_CHECKED, true)) R.id.sourceTypeLocal
+            else R.id.sourceTypeYandexDisk
+        )
+
+        binding.targetTypeToggleButton.check(
+            if (getBooleanFromPreferences(IS_LOCAL_TARGET_CHECKED, true)) R.id.targetTypeLocal
+            else R.id.targetTypeYandexDisk
+        )
     }
 
     private fun prepareButtons() {
@@ -112,7 +140,9 @@ class ReadingAndDirCreationFragment :
 
         binding.checkFileExistsButton.setOnClickListener { checkFileExists() }
         binding.getDownloadLinkButton.setOnClickListener { onGetDownloadLinkClicked() }
-        binding.writeToFileButton.setOnClickListener { onWriteToFileButtonClicked() }
+
+        binding.writeToFileButton.setOnClickListener { onWriteToFileButtonClicked(false) }
+        binding.writeToFileWithProgressButton.setOnClickListener { onWriteToFileButtonClicked(true) }
 
         binding.getInputStreamButton.setOnClickListener {
             if (sourceCloudReader is LocalCloudReader)
@@ -130,14 +160,14 @@ class ReadingAndDirCreationFragment :
 //        binding.deleteDirButton.setOnClickListener { deleteDirectory() }
     }
 
-    private fun onWriteToFileButtonClicked() {
+    private fun onWriteToFileButtonClicked(withProgressCounting: Boolean = false) {
         if (targetIsLocalChecked)
-            storageAccessHelper.requestWriteAccess { writeStreamToFile() }
+            storageAccessHelper.requestWriteAccess { writeStreamToFile(withProgressCounting) }
         else
-            writeStreamToFile()
+            writeStreamToFile(withProgressCounting)
     }
 
-    private fun writeStreamToFile() {
+    private fun writeStreamToFile(withProgressCounting: Boolean) {
 
         val sourceFilePath = if (sourceIsLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
 
@@ -150,16 +180,17 @@ class ReadingAndDirCreationFragment :
         lifecycleScope.launch (Dispatchers.IO) {
             try {
                 sourceCloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
-                    cloudWriter.putFile(
-                        inputStream,
-                        targetFilePath,
-                        object: CountingOutputStream.Callback{
-                            override fun onCountChanged(count: Long) {
-                                Log.d(TAG, "Байт записано: $count")
+
+                    inputStream.let {
+                        if (withProgressCounting) CountingInputStream(inputStream, object: CountingInputStream.Callback{
+                            override fun onCountChanged(bytes: Int, total: Int) {
+
                             }
-                        },
-                        true
-                    )
+                        })
+                        else inputStream
+                    }.also { strm ->
+                        cloudWriter.putFile(strm, targetFilePath, true)
+                    }
                 }
             }
             catch (e: Exception) {
@@ -377,7 +408,7 @@ class ReadingAndDirCreationFragment :
 
     private val sourceIsLocalChecked get(): Boolean = binding.sourceTypeToggleButton.checkedButtonId == R.id.sourceTypeLocal
 
-    private val targetIsLocalChecked get(): Boolean = binding.sourceTypeToggleButton.checkedButtonId == R.id.targetTypeLocal
+    private val targetIsLocalChecked get(): Boolean = binding.targetTypeToggleButton.checkedButtonId == R.id.targetTypeLocal
 
 
     /*private fun checkDirExists(isLocal: Boolean) {
@@ -580,6 +611,8 @@ class ReadingAndDirCreationFragment :
         const val FILE_NAME = "FILE_NAME"
         const val DIR_NAME = "DIR_NAME"
         const val CANONICAL_ROOT_PATH = "/"
+        const val IS_LOCAL_SOURCE_CHECKED = "IS_LOCAL_SOURCE_CHECKED"
+        const val IS_LOCAL_TARGET_CHECKED = "IS_LOCAL_TARGET_CHECKED"
 
         fun create(): Fragment = ReadingAndDirCreationFragment()
     }

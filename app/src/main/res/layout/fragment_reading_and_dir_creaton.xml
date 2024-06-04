@@ -99,41 +99,46 @@
         <Button
             android:id="@+id/getDownloadLinkButton"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:backgroundTint="#1E88E5"
             android:text="Получить ссылку для скачивания"
             app:icon="@drawable/ic_link"
             app:iconGravity="textStart" />
 
-        <LinearLayout
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/getInputStreamButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:backgroundTint="#9CCC65"
+            android:text="Получить как поток для чтения"
+            app:icon="@drawable/ic_stream"
+            app:iconGravity="textStart" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/getInputStreamButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:backgroundTint="#9CCC65"
-                android:text="Получить как поток для чтения"
-                app:icon="@drawable/ic_stream"
-                app:iconGravity="textStart" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/writeToFileButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#FFCA28"
+            android:textColor="@color/black"
+            android:text="Записать в файл"
+            app:icon="@drawable/ic_file"
+            app:iconGravity="textEnd"
+            app:iconTint="@color/black"/>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/writeToFileButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:backgroundTint="#FFCA28"
-                android:textColor="@color/black"
-                android:text="Записать в файл"
-                app:icon="@drawable/ic_file"
-                app:iconGravity="textEnd"
-                app:iconTint="@color/black"/>
-
-        </LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/writeToFileWithProgressButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:backgroundTint="#FFEE58"
+            android:textColor="@color/black"
+            android:text="Записать c отображением прогресса"
+            app:icon="@drawable/ic_file"
+            app:iconGravity="textEnd"
+            app:iconTint="@color/black"/>
 
         <LinearLayout
             android:layout_width="match_parent"
