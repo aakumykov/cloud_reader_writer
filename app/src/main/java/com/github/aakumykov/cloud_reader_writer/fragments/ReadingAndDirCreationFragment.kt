@@ -208,6 +208,8 @@ class ReadingAndDirCreationFragment :
             try {
                 sourceCloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
 
+                    Log.d(TAG, "Доступно байт в потоке: ${inputStream.available()}")
+
                     val countingInputStream = CountingInputStream(inputStream, bufferSize = 1024 * 1024) { bytesRead ->
                         Log.d(TAG, "Прочитано байт: $bytesRead")
                     }
