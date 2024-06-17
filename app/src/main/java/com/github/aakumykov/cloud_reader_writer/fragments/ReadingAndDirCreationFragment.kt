@@ -47,6 +47,10 @@ class ReadingAndDirCreationFragment :
     private lateinit var permissionsRequester: PermissionsRequester
     private lateinit var storageAccessHelper: StorageAccessHelper
 
+    private val fullFileName: String get() {
+        return if (sourceIsLocal) filePathInLocalDownloads(inputFileName)
+        else inputFileName
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -76,8 +80,7 @@ class ReadingAndDirCreationFragment :
     override fun onDestroyView() {
         super.onDestroyView()
 
-        storeStringInPreferences(FILE_NAME, inputFileName)
-        storeStringInPreferences(DIR_NAME, inputDirName)
+        storeInputFields()
 
         _binding = null
     }
@@ -88,9 +91,40 @@ class ReadingAndDirCreationFragment :
         binding.dirNameInput.addTextChangedListener { storeStringInPreferences(DIR_NAME, inputDirName) }
     }
 
+    private fun storeInputFields() {
+
+        storeStringInPreferences(FILE_NAME, inputFileName)
+        storeStringInPreferences(DIR_NAME, inputDirName)
+
+        storeStringInPreferences(SOURCE_STORAGE_TYPE, when(binding.sourceTypeToggleButton.checkedButtonId) {
+            R.id.sourceTypeLocal -> StorageType.LOCAL.name
+            R.id.sourceTypeYandexDisk -> StorageType.YANDEX_DISK.name
+            else -> ""
+        })
+
+        storeStringInPreferences(TARGET_STORAGE_TYPE, when(binding.targetTypeToggleButton.checkedButtonId) {
+            R.id.targetTypeLocal -> StorageType.LOCAL.name
+            R.id.targetTypeYandexDisk -> StorageType.YANDEX_DISK.name
+            else -> ""
+        })
+    }
+
     private fun restoreInputFields() {
+
         getStringFromPreferences(FILE_NAME)?.let { binding.fileNameInput.setText(it) }
         getStringFromPreferences(DIR_NAME)?.let { binding.dirNameInput.setText(it) }
+
+        when(getStringFromPreferences(SOURCE_STORAGE_TYPE)) {
+            StorageType.LOCAL.toString() -> binding.sourceTypeLocal.isSelected = true
+            StorageType.YANDEX_DISK.toString() -> binding.sourceTypeYandexDisk.isSelected = true
+            else -> {}
+        }
+
+        when(getStringFromPreferences(TARGET_STORAGE_TYPE)) {
+            StorageType.LOCAL.toString() -> binding.targetTypeLocal.isSelected = true
+            StorageType.YANDEX_DISK.toString() -> binding.targetTypeYandexDisk.isSelected = true
+            else -> {}
+        }
     }
 
     private fun prepareButtons() {
@@ -131,14 +165,14 @@ class ReadingAndDirCreationFragment :
 
     private fun onWriteToFileButtonClicked() {
         if (targetIsLocalChecked)
-            storageAccessHelper.requestWriteAccess { writeStreamToFile() }
+            storageAccessHelper.requestFullAccess { writeStreamToFile() }
         else
             writeStreamToFile()
     }
 
     private fun writeStreamToFile() {
 
-        val sourceFilePath = if (sourceIsLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
+        val sourceFilePath = if (sourceIsLocal) filePathInLocalDownloads(inputFileName) else inputFileName
 
         val targetFilePath = if (targetIsLocalChecked) filePathInLocalDownloads("target_$inputFileName") else "target_$inputFileName"
 
@@ -149,8 +183,13 @@ class ReadingAndDirCreationFragment :
         lifecycleScope.launch (Dispatchers.IO) {
             try {
                 sourceCloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
+
+                    val countingInputStream = CountingInputStream(inputStream, bufferSize = 1024 * 1024) { bytesRead ->
+                        Log.d(TAG, "Прочитано байт: $bytesRead")
+                    }
+
                     cloudWriter.putFile(
-                        inputStream,
+                        countingInputStream,
                         targetFilePath,
                         true
                     )
@@ -170,7 +209,7 @@ class ReadingAndDirCreationFragment :
 
         beginAndBusy()
 
-        val fullFileName = if (sourceIsLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
+        val fullFileName = if (sourceIsLocal) filePathInLocalDownloads(inputFileName) else inputFileName
 
         lifecycleScope.launch(Dispatchers.IO) {
             sourceCloudReader.fileExists(fullFileName).also { result ->
@@ -192,8 +231,6 @@ class ReadingAndDirCreationFragment :
     }
 
     private fun onGetDownloadLinkClicked() {
-
-        val fullFileName = if (sourceIsLocalChecked) filePathInLocalDownloads(inputFileName) else inputFileName
 
         beginAndBusy()
 
@@ -218,11 +255,19 @@ class ReadingAndDirCreationFragment :
     }
 
     private fun getInputStreamOfFile() {
+        if (sourceIsLocal) {
+            storageAccessHelper.requestReadAccess { getInputStreamOfFileReal() }
+        } else {
+            getInputStreamOfFileReal()
+        }
+    }
+
+    private fun getInputStreamOfFileReal() {
 
         beginAndBusy()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            sourceCloudReader.getFileInputStream(inputFileName).also { result ->
+            sourceCloudReader.getFileInputStream(fullFileName).also { result ->
                 withContext(Dispatchers.Main) { hideProgressBar() }
 
                 try {
@@ -273,7 +318,7 @@ class ReadingAndDirCreationFragment :
     }*/
 
     private fun createDir() {
-        if (sourceIsLocalChecked)
+        if (sourceIsLocal)
             createLocalDir()
         else
             createCloudDir()
@@ -283,7 +328,7 @@ class ReadingAndDirCreationFragment :
 
         beginAndBusy()
 
-        val fullDirPath = if (sourceIsLocalChecked) dirPathInLocalDownloads(inputDirName) else inputDirName
+        val fullDirPath = if (sourceIsLocal) dirPathInLocalDownloads(inputDirName) else inputDirName
 
         lifecycleScope.launch(Dispatchers.IO){
             sourceCloudReader.fileExists(fullDirPath)
@@ -324,7 +369,7 @@ class ReadingAndDirCreationFragment :
     }*/
 
     private fun targetDir(): String =
-        if (sourceIsLocalChecked) localMusicDirPath() else CANONICAL_ROOT_PATH
+        if (sourceIsLocal) localMusicDirPath() else CANONICAL_ROOT_PATH
 
 
     /*private fun pickFile() {
@@ -365,13 +410,13 @@ class ReadingAndDirCreationFragment :
 
 //    private fun cloudWriter(): CloudWriter = if (isLocalChecked) localCloudWriter() else yandexCloudWriter()
 
-    private val sourceCloudReader get(): CloudReader = if (sourceIsLocalChecked) localCloudReader else yandexCloudReader
+    private val sourceCloudReader get(): CloudReader = if (sourceIsLocal) localCloudReader else yandexCloudReader
 
     private val cloudWriter get(): CloudWriter = if (targetIsLocalChecked) localCloudWriter else yandexCloudWriter
 
-    private val sourceIsLocalChecked get(): Boolean = binding.sourceTypeToggleButton.checkedButtonId == R.id.sourceTypeLocal
+    private val sourceIsLocal get(): Boolean = binding.sourceTypeToggleButton.checkedButtonId == R.id.sourceTypeLocal
 
-    private val targetIsLocalChecked get(): Boolean = binding.sourceTypeToggleButton.checkedButtonId == R.id.targetTypeLocal
+    private val targetIsLocalChecked get(): Boolean = binding.targetTypeToggleButton.checkedButtonId == R.id.targetTypeLocal
 
 
     /*private fun checkDirExists(isLocal: Boolean) {
@@ -570,6 +615,8 @@ class ReadingAndDirCreationFragment :
 
     companion object {
         val TAG: String = MainActivity::class.java.simpleName
+        const val SOURCE_STORAGE_TYPE = "SOURCE_STORAGE_TYPE"
+        const val TARGET_STORAGE_TYPE = "TARGET_STORAGE_TYPE"
         const val YANDEX_AUTH_TOKEN = "AUTH_TOKEN"
         const val FILE_NAME = "FILE_NAME"
         const val DIR_NAME = "DIR_NAME"
