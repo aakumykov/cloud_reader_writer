@@ -5,10 +5,9 @@
     <string name="login_to_yandex">Авторизоваться в Яндекс</string>
     <string name="logout_from_yandex">Выйти из Яндекса</string>
     <string name="question">\?</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="source_type_label">Тип источника:</string>
+    <string name="from_storage">Из:</string>
+    <string name="to_storage">В:</string>
     <string name="type_name_yandex_disk">Яндекс.Диск</string>
     <string name="type_name_local">Локальный</string>
-    <string name="target_type_label">Тип приёмника</string>
 </resources>

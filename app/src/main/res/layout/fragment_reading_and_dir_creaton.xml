@@ -12,32 +12,81 @@
         android:orientation="vertical"
         tools:context=".MainActivity">
 
-        <TextView
-            android:id="@+id/sourceTypeLabel"
-            android:text="@string/source_type_label"
-            style="@style/storage_type_label" />
+        <!--        <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:text="Запросить доступ:" />
 
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/sourceTypeToggleButton"
-            style="@style/storage_type_toggle_button">
 
-            <!--style="?attr/materialButtonOutlinedStyle"-->
-            <Button
-                android:id="@+id/sourceTypeLocal"
-                style="@style/local_storage_type_button"
-                android:text="@string/type_name_local" />
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    style="@style/storage_type_toggle_button"
+                    android:layout_marginBottom="12dp">
 
-            <Button
-                android:id="@+id/sourceTypeYandexDisk"
-                style="@style/yandex_disk_storage_type_button"
-                android:text="@string/type_name_yandex_disk" />
+                    <Button
+                        android:id="@+id/requestReadAccess"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:text="Чтение" />
 
-        </com.google.android.material.button.MaterialButtonToggleGroup>
+                    <Button
+                        android:id="@+id/requestWriteAccess"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:text="Запись" />
 
+                    <Button
+                        android:id="@+id/requestFullAccess"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:text="Полный" />
+
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+        -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/sourceTypeLabel"
+                android:text="@string/from_storage"
+                style="@style/storage_type_label" />
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/sourceTypeToggleButton"
+                style="@style/storage_type_toggle_button">
+
+                <!--style="?attr/materialButtonOutlinedStyle"-->
+                <Button
+                    android:id="@+id/sourceTypeLocal"
+                    style="@style/local_storage_type_button"
+                    android:text="@string/type_name_local" />
+
+                <Button
+                    android:id="@+id/sourceTypeYandexDisk"
+                    style="@style/yandex_disk_storage_type_button"
+                    android:text="@string/type_name_yandex_disk" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
 
         <TextView
             android:id="@+id/targetTypeLabel"
-            android:text="@string/target_type_label"
+            android:text="@string/to_storage"
             style="@style/storage_type_label" />
 
         <com.google.android.material.button.MaterialButtonToggleGroup
@@ -56,6 +105,7 @@
 
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
+    </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/yandexAuthButton"

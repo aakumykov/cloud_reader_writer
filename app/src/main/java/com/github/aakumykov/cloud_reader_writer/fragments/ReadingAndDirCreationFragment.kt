@@ -60,6 +60,7 @@ class ReadingAndDirCreationFragment :
         storageAccessHelper = StorageAccessHelper.create(this).apply {
             prepareForReadAccess()
             prepareForWriteAccess()
+            prepareForFullAccess()
         }
 
         restoreInputFields()
@@ -129,9 +130,24 @@ class ReadingAndDirCreationFragment :
 
     private fun prepareButtons() {
 
-//        binding.overwriteSwitch.setOnCheckedChangeListener { _, isChecked ->
-//            binding.overwriteSwitch.setText(if(isChecked) R.string.overwrite else R.string.do_not_overwrite)
-//        }
+        /*binding.requestReadAccess.setOnClickListener {
+            storageAccessHelper.requestReadAccess { isGranted ->
+                showToast("Доступ на чтение: ${if(isGranted) "получен" else "не получен"}")
+            }
+        }
+
+        binding.requestWriteAccess.setOnClickListener {
+            storageAccessHelper.requestReadAccess { isGranted ->
+                showToast("Доступ на запись: ${if(isGranted) "получен" else "не получен"}")
+            }
+        }
+
+        binding.requestFullAccess.setOnClickListener {
+            storageAccessHelper.requestReadAccess { isGranted ->
+                showToast("Полный доступ: ${if(isGranted) "получен" else "не получен"}")
+            }
+        }*/
+
 
         binding.yandexAuthButton.setOnClickListener {
             if (null == yandexAuthToken)
@@ -164,12 +180,18 @@ class ReadingAndDirCreationFragment :
     }
 
     private fun onWriteToFileButtonClicked() {
-        if (targetIsLocal)
-            storageAccessHelper.requestFullAccess {
-                writeStreamToFile()
+
+        if (targetIsLocal) {
+            storageAccessHelper.requestFullAccess { isGranted ->
+                if (isGranted)
+                    writeStreamToFile()
+                else
+                    showToast("Нет досутпа к хранилищу")
+            }
         }
-        else
+        else {
             writeStreamToFile()
+        }
     }
 
     private fun writeStreamToFile() {
@@ -233,6 +255,11 @@ class ReadingAndDirCreationFragment :
     }
 
     private fun onGetDownloadLinkClicked() {
+
+        if (!sourceIsLocal && null == yandexAuthToken) {
+            showToast("Авторизуйтесь в Яндекс")
+            return
+        }
 
         beginAndBusy()
 
@@ -557,7 +584,7 @@ class ReadingAndDirCreationFragment :
     }
 
     private fun hideProgressBar() {
-        binding.root.post { binding.progressBar.visibility = View.INVISIBLE }
+        binding.root.post { binding.progressBar.visibility = View.GONE }
     }
 
     private fun showError(throwable: Throwable?) {

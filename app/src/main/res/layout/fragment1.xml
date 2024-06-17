@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/sourceTypeLabel"
-        android:text="@string/source_type_label"
+        android:text="@string/from_storage"
         style="@style/storage_type_label" />
 
     <com.google.android.material.button.MaterialButtonToggleGroup
@@ -29,7 +29,7 @@
 
     <TextView
         android:id="@+id/targetTypeLabel"
-        android:text="@string/target_type_label"
+        android:text="@string/to_storage"
         style="@style/storage_type_label" />
 
     <com.google.android.material.button.MaterialButtonToggleGroup
