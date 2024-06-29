@@ -550,7 +550,11 @@ class ReadingAndDirCreationFragment :
         return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/" + name
     }
 
-    private val yandexCloudWriter get(): CloudWriter = YandexCloudWriter(okHttpClient, gson, yandexAuthToken!!)
+    private val yandexCloudWriter get(): CloudWriter = YandexCloudWriter(
+                                                            okHttpClient = okHttpClient,
+                                                            gson = gson,
+                                                            authToken = yandexAuthToken!!
+                                                        )
 
     private val okHttpClient get() = OkHttpClient.Builder().build()
 

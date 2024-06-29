@@ -61,5 +61,5 @@ dependencies {
 
     implementation 'androidx.fragment:fragment-ktx:1.6.2'
 
-    implementation 'com.github.aakumykov:cloud_reader_writer:2.0.0-alpha'
+    implementation 'com.github.aakumykov:cloud_reader_writer:2.2.0-alpha'
 }
