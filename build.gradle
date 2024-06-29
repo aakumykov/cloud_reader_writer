@@ -1,5 +1,16 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        commonMajorVersionNumber = 2
+        commonMinorVersionNumber = 0
+        commonPatchVersionNumber = 0
+        commonVersionSuffix = "alpha"
+        commonVersionCode = 14
+    }
+}
+
 plugins {
-alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.application) apply false
     alias(libs.plugins.jetbrains.kotlin.android) apply false
 }
