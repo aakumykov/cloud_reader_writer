@@ -1,6 +1,0 @@
-[submodule "cloud_reader"]
-	path = cloud_reader
-	url = git@github.com:aakumykov/cloud_reader.git
-[submodule "cloud_writer"]
-	path = cloud_writer
-	url = git@github.com:aakumykov/cloud_writer.git
