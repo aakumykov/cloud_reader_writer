@@ -27,6 +27,10 @@ import com.gitlab.aakumykov.exception_utils_module.ExceptionUtils
 import com.google.gson.Gson
 import com.yandex.authsdk.internal.strategy.LoginType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -39,6 +43,8 @@ class ReadingAndDirCreationFragment :
     Fragment(R.layout.fragment_reading_and_dir_creaton),
     CloudAuthenticator.Callbacks
 {
+    private var currentJob: Job? = null
+
     private var _binding: FragmentReadingAndDirCreatonBinding? = null
     private val binding get() = _binding!!
 
@@ -163,6 +169,8 @@ class ReadingAndDirCreationFragment :
         binding.getDownloadLinkButton.setOnClickListener { onGetDownloadLinkClicked() }
         binding.writeToFileButton.setOnClickListener { onWriteToFileButtonClicked() }
 
+        binding.cancelWritingToFile.setOnClickListener { onCancelWriteToFileButtonClicked() }
+
         binding.getInputStreamButton.setOnClickListener {
             if (sourceCloudReader is LocalCloudReader)
                 storageAccessHelper.requestReadAccess { getInputStreamOfFile() }
@@ -204,9 +212,9 @@ class ReadingAndDirCreationFragment :
 
         showProgressBar()
 
-        lifecycleScope.launch (Dispatchers.IO) {
+        currentJob = lifecycleScope.launch (Dispatchers.IO) {
             try {
-                sourceCloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
+                /*sourceCloudReader.getFileInputStream(sourceFilePath).getOrThrow().use { inputStream ->
 
                     Log.d(TAG, "Доступно байт в потоке: ${inputStream.available()}")
 
@@ -219,14 +227,36 @@ class ReadingAndDirCreationFragment :
                         targetFilePath,
                         true
                     )
+                }*/
+
+                repeat(30) {
+                    if (isActive) {
+                        delay(1000)
+                        Log.d(TAG, "Жду 1 с...")
+                    }
+                    else
+                        return@repeat
                 }
+                Log.d(TAG, "Цикл ожидания прерван")
             }
             catch (e: Exception) {
                 showError(e)
             }
             finally {
                 hideProgressBar()
+                currentJob = null
             }
+        }
+    }
+
+
+    private fun onCancelWriteToFileButtonClicked() {
+        currentJob?.also {
+            lifecycleScope.launch (Dispatchers.IO) {
+                it.cancelAndJoin()
+            }
+        } ?: {
+            showToast("Копирование не запущено")
         }
     }
 
